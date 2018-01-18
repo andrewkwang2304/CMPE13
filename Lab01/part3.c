@@ -11,7 +11,7 @@
 #include <plib.h>
 
 // User libraries
-
+#include "CMath.h"
 
 // **** Set macros and preprocessor directives ****
 
@@ -32,10 +32,10 @@ int main() {
 
         /******************************** Your custom code goes below here *******************************/
 
-        double mathHypot=hypotf(DX,DY);
+        double mathHypot=enorm(PX, PY, QX, QY);/*hypotf(DX,DY);*/
         printf("Hypot returned %f and should return %f\r\n",mathHypot,6.9340);
         
-        double mathAtan2=atan2(QX,QY);
+        double mathAtan2=arctangent2(QY, QX);/*atan2(QX,QY);*/
         printf("Atan2 returned %f and should return %f\r\n",mathAtan2,.4918);
           
 
