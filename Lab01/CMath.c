@@ -19,6 +19,7 @@ float myabs(float x) {
     if (x < 0) {
         x = -x;
     }
+    return x;
 }
 
 float enorm(float px, float py, float qx, float qy) {
