@@ -50,10 +50,10 @@ float arctangent2(float y, float x) {
     float r, phi;
     if (x > 0) {
         r = (x - absY) / (x + absY);
-        phi = 0.1963 * r * r * r - .9817 * r + 3.14159 * 0.75;
+        phi = (0.1963 * r * r * r) - (.9817 * r) + (3.14159 * 0.75);
     } else {
         r = (x + absY) / (x - absY);
-        phi = 0.1963 * r * r * r - .9817 * r + 3.14159 * 0.75;
+        phi = (0.1963 * r * r * r) - (.9817 * r) + (3.14159 * 0.75);
     }
     if (y < 0) {
         phi = -phi;
