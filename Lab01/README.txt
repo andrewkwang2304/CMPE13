@@ -1,2 +1,34 @@
-This is a test push for testy people.
-This is test number 2 for the MPLAB IDE.
+Part 1 Values:
+214
+158
+244
+164
+206
+
+214
+158
+244
+164
+206
+
+158
+214
+244
+164
+206
+
+158
+214
+244
+164
+206
+
+158
+164
+214
+244
+206
+
+
+
+Lines 14, 16, 22, 29, 34 are where debug changes were made
