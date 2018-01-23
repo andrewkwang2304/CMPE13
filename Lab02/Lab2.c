@@ -26,6 +26,29 @@ double Round(double operand);
 int main(void)
 {
     BOARD_Init();
+    
+    char i;
+    
+    printf("================================\n");
+    printf("Welcome to the Lab2 Calculator!\n");
+    printf("================================\n");
+    printf("\n");
+    
+    printf("Choose a mathematical operation:\n");
+    printf("   '*' - Performs multiplication on"
+            " two operands.\n");
+    printf("   '/' - Performs division on two operands, operand 1 divided by operand 2.\n");
+    printf("   '+' - Performs addition on two operands.\n");
+    printf("   '-' - Performs subtraction on two operands, subtracting the second operand from the first.\n");
+    printf("   'v' - The Average function returns the average of its two arguments.\n");
+    printf("   'a' - Absolute value calculates the absolute value of its argument.\n");
+    printf("   'c' - The Celsius function treats its argument as a value in degrees Fahrenheit and converts it to degrees Celsius.\n");
+    printf("   'f' - The Fahrenheit function treats its argument as a value in degrees Celsius and converts it to degrees Fahrenheit.\n");
+    printf("   't' - The Tangent function takes in a value in degrees and calculates the tangent value and returns the result.\n");
+    printf("   'r' - The Round function rounds a number down if its fractional part is less than 0.5, and rounds up otherwise.\n");
+    printf("\n");
+    scanf("Enter an operation: %c\n", &i);
+    printf("You put %c as your input.\n", i);
 #else
 
 int their_main(void)
@@ -35,7 +58,7 @@ int their_main(void)
     /******************************************************************************
      * Your code goes in between this comment and the following one with asterisks.
      *****************************************************************************/
-
+    
 
 
 
