@@ -25,30 +25,7 @@ double Round(double operand);
 
 int main(void)
 {
-    BOARD_Init();
-    
-    char i;
-    
-    printf("================================\n");
-    printf("Welcome to the Lab2 Calculator!\n");
-    printf("================================\n");
-    printf("\n");
-    
-    printf("Choose a mathematical operation:\n");
-    printf("   '*' - Performs multiplication on"
-            " two operands.\n");
-    printf("   '/' - Performs division on two operands, operand 1 divided by operand 2.\n");
-    printf("   '+' - Performs addition on two operands.\n");
-    printf("   '-' - Performs subtraction on two operands, subtracting the second operand from the first.\n");
-    printf("   'v' - The Average function returns the average of its two arguments.\n");
-    printf("   'a' - Absolute value calculates the absolute value of its argument.\n");
-    printf("   'c' - The Celsius function treats its argument as a value in degrees Fahrenheit and converts it to degrees Celsius.\n");
-    printf("   'f' - The Fahrenheit function treats its argument as a value in degrees Celsius and converts it to degrees Fahrenheit.\n");
-    printf("   't' - The Tangent function takes in a value in degrees and calculates the tangent value and returns the result.\n");
-    printf("   'r' - The Round function rounds a number down if its fractional part is less than 0.5, and rounds up otherwise.\n");
-    printf("\n");
-    scanf("Enter an operation: %c\n", &i);
-    printf("You put %c as your input.\n", i);
+
 #else
 
 int their_main(void)
@@ -58,7 +35,16 @@ int their_main(void)
     /******************************************************************************
      * Your code goes in between this comment and the following one with asterisks.
      *****************************************************************************/
+    BOARD_Init();
     
+    char command;
+    
+    printf("====================================\n");
+    printf("Welcome to Andrew's Lab2 Calculator!\n");
+    printf("====================================\n");
+    printf("\n");
+    printf("Choose a mathematical operation to perform (*,/,+,-,v,a,c,f,t,r): ");
+    scanf("%c", &command);
 
 
 
@@ -72,32 +58,49 @@ int their_main(void)
 /********************************************************************************
  * Define the Absolute Value function here.
  ********************************************************************************/
-
-
+double myabs(double i) {
+    if(i < 0) {
+        i = -i;
+    }
+    return i;
+}
 
 /*********************************************************************************
  * Define the Fahrenheit to Celsius function here.
  ********************************************************************************/
-
+double cToF(double celsius) {
+    double fahren = celsius * (9.0/5.0) + 32.0;
+    return fahren;
+}
 
 
 /*********************************************************************************
  * Define the Celsius to Fahrenheit function here.
  ********************************************************************************/
-
+double fToC(double fahren) {
+    double celsius = (fahren - 32.0) * (5/9);
+    return celsius;
+}
 
 
 /********************************************************************************
  * Define the Average function here.
  *******************************************************************************/
-
-
+double average(double op1, double op2) {
+    double avg = (op1 + op2) / 2;
+    return avg;
+}
 
 /*********************************************************************************
  * Define the Tangent function that takes input in degrees (Note: Your tangent 
  * function relies on a call from the tangent function of math.h which uses 
  * radians).
  ********************************************************************************/
+
+double tanDegrees(double degrees) {
+    double radians = degrees * (M_PI / 180.0);
+    return tan(radians);
+}
 
 /*********************************************************************************
  * Define the Round function here.
