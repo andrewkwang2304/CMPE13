@@ -10,13 +10,6 @@
 #include <xc.h>
 #include <plib.h>
 
-// User libraries
-
-
-// **** Set macros and preprocessor directives ****
-
-// **** Define global, module-level, or external variables here ****
-
 // **** Declare function prototypes ****
 double AbsoluteValue(double i);
 double CelsiusToFahrenheit(double celsius);
@@ -121,17 +114,15 @@ int their_main(void) {
                 break;
 
             case 'r':
+                printf("Enter the first operand: ");
+                scanf("%lf%c", &operand1, &dummyNewLine);
+                printf("Result of Round(%f): %f\n", operand1, Round(operand1));
                 break;
 
             default:
                 fprintf(stderr, "\'%c\' is not one of the listed commands.\n", command);
         }
     }
-
-
-
-
-
     /******************************************************************************
      * Your code goes in between this comment and the preceding one with asterisks
      *****************************************************************************/
@@ -188,6 +179,6 @@ double Tangent(double degrees) {
  * this function.
  ********************************************************************************/
 double Round(double operand) {
-    return operand;
+    return (double) ((operand >= 0) ? (int) (operand + 0.50) : (int) (operand - 0.50));
 }
 
