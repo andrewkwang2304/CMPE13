@@ -17,7 +17,7 @@
 // **** Set macros and preprocessor directives ****
 
 // **** Define global, module-level, or external variables here ****
-int score = 0;
+
 // **** Declare function prototypes ****
 void MatrixSetZeroMML(float mat[3][3]);
 
@@ -50,20 +50,6 @@ int main() {
         { 1, 1, 2},
         { 0, 0, 3}
     };
-    
-    float A1[3][3] = {
-        { 105, 68, 52},
-        { 15, 14, 10},
-        { 9, 6, 0}
-    };
-    
-    float A2[3][3] = {
-        { 57, 27, 20},
-        { 51, 8, -8},
-        { 39, 76, 68}
-    };
-    
-    
 
     float result[3][3];
 
@@ -81,27 +67,15 @@ int main() {
     printf("========================\n");
 
     // MatrixMultiply test: CHECK
-    
-    MatrixMultiply(M1, M2, result);
-    
-    MatrixPrint(A1);
+    printf("MatrixMultiply test: \n");
     printf("\n");
+    MatrixMultiply(M1, M2, result);
+    printf("Multiply M1 * M2:\n");
     MatrixPrint(result);
     printf("\n");
-    
-    if(result == A1) {
-        score++;
-    }
-
     MatrixMultiply(M2, M3, result);
-    
-    if(result == A2) {
-        score++;
-    }
-    
-    printf("PASSED (%d/2): MatrixMultiply()\n", score);
-    score = 0;
-    
+    printf("Multiply M2 * M3:\n");
+    MatrixPrint(result);
     printf("========================\n");
 
     // SetZero test: CHECK
