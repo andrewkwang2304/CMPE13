@@ -9,7 +9,7 @@
 #include <plib.h>
 
 // User libraries
-
+#include "Stack.h"
 
 // **** Set macros and preprocessor directives ****
 
@@ -35,7 +35,15 @@ int their_main(void)
 #endif // LAB4_TESTING
 
     /******************************** Your custom code goes below here *******************************/
-    printf("Welcome to CMPE13 Lab4 Blank. Please remove before starting.\r\n");
+    
+    // TEST CONSTANTS UNDER HERE
+    int test1Input = 0;
+    int test1ExpOutput = 5;
+    
+    // CALCULATE RESULT
+    
+    
+    // OUTPUT TEST RESULTS
 
 
     /*************************************************************************************************/
