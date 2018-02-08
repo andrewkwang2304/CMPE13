@@ -1,6 +1,9 @@
 // **** Include libraries here ****
 // Standard libraries
 #include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
 //CMPE13 Support Library
 #include "BOARD.h"
 
@@ -14,6 +17,8 @@
 // **** Set macros and preprocessor directives ****
 
 // **** Define global, module-level, or external variables here ****
+#define TRUE 1
+#define FALSE 0
 
 // **** Declare function prototypes ****
 /*
@@ -21,6 +26,7 @@
  * below main after the related comment.
  */
 int ProcessBackspaces(char *rpn_sentence);
+float calculate(char* operand, float O1, float O2);
 
 // If this code is used for testing, rename main to something we can call from our testing code. We
 // also skip all processor configuration and initialization code.
@@ -75,13 +81,47 @@ int their_main(void)
 
 
     // RPN
+    struct Stack s;
+    char arr[60];
+    char operands[] = {'+', '-', '/', '*', '\0'};
+    int errorBool;
+    float O1, O2, result;
+    //char dlim[] = {' ', '-'};
     
     printf("Welcome to the RPN Calculator!\n");
-    int i = 0, size;
-    char arr[500];
     //char temp;
     while(TRUE) {
-        scanf("%[^\n]", &arr);
+        printf("Type your RPN string using (+, -, /, *): \n");
+        fgets(arr, 59, stdin);
+        // Initialize the stack:
+        StackInit(&s);
+        // Tokenize the thing
+        char* token = strtok(arr, " ");
+        // Continue looping until token is NULL.
+        while(token != NULL) {
+            // the meat of the code goes under here.
+            if(isdigit(token[0])) {
+                errorBool = StackPush(&s, atof(token));
+                if(errorBool != 1) {
+                    printf("ERROR: No more room on the stack.");
+                    break;
+                }
+            } else if(strchr(token[0], operands)) { // token is an operand, which means pop, pop, calculate, push
+                if(StackGetSize(&s) >= 2) { // error checking for two elements
+                    if(StackPop(&s, &O1) == 1 && StackPop(&s, &O2) == 1) {
+                        errorBool = StackPush(&s, calculate(token[0], O1, O2));
+                    } else {
+                        printf("ERROR: Not enough operands before operator.\n");
+                        break;
+                    }
+                }
+            } else {
+                printf("ERROR: Invalid character in RPN string.");
+            }
+            token = strtok(NULL, " ");
+        }
+        
+        
     }
     /*************************************************************************************************/
 
@@ -102,6 +142,18 @@ int their_main(void)
  */
 int ProcessBackspaces(char *rpn_sentence) {
     return 0;
+}
+
+float calculate(char* operand, float O1, float O2) {
+    if(operand == '*') {
+        return O1 * O2;
+    } else if(operand == '/') {
+        return O1/O2;
+    } else if(operand == '+') {
+        return O1 + O2;
+    } else if(operand == '-') {
+        return O1 - O2;
+    }
 }
 
 

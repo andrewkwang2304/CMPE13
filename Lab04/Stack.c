@@ -1,6 +1,8 @@
-#include <Stack.h>
-#include <BOARD.h>
+#include "Stack.h"
+#include "BOARD.h"
 
+#define TRUE 1
+#define FALSE 0
 /**
  * This function initializes the stack. For a statically allocated stack such
  * as this, this just means initializing currentItemIndex to -1 and setting
@@ -20,7 +22,7 @@ int StackPush(struct Stack *stack, float value) {
     if(stack->currentItemIndex >= STACK_SIZE || stack->initialized == FALSE) {
         return STANDARD_ERROR;
     } else {
-        *(stack + stack->currentItemIndex) = value;
+        stack->stackItems[stack->currentItemIndex] = value;
         stack->currentItemIndex++;
         return SUCCESS;
     }
@@ -43,7 +45,7 @@ int StackPop(struct Stack *stack, float *value) {
     if(stack->currentItemIndex <= -1 || stack->initialized == FALSE) {
         return STANDARD_ERROR;
     } else {
-        value = stack[stack->currentItemIndex];
+        *value = stack->stackItems[stack->currentItemIndex];
         stack->currentItemIndex--;
         return SUCCESS;
     }
@@ -56,9 +58,9 @@ int StackPop(struct Stack *stack, float *value) {
  * initialized and return FALSE if it isn't.
  */
 int StackIsEmpty(const struct Stack *stack) {
-    if(stack->currentItemIndex == -1) {
+    if(stack->currentItemIndex == -1 && stack->initialized) {
         return TRUE;
-    } else if(stack->currentItemIndex >= 0 || stack->initialized == FALSE) {
+    } else {
         return FALSE;
     }
 }
@@ -70,9 +72,9 @@ int StackIsEmpty(const struct Stack *stack) {
  * the stack isn't initialized.
  */
 int StackIsFull(const struct Stack *stack) {
-    if(stack->currentItemIndex == STACK_SIZE - 1) {
+    if(stack->currentItemIndex == STACK_SIZE - 1 && stack->initialized) {
         return TRUE;
-    } else if(stack->currentItemIndex < STACK_SIZE - 1 || stack->initialized == FALSE) {
+    } else {
         return FALSE;
     }
 }
@@ -86,10 +88,7 @@ int StackIsFull(const struct Stack *stack) {
 int StackGetSize(const struct Stack *stack) {
     if(stack->initialized == FALSE) {
         return SIZE_ERROR;
-    } else if(stack->currentItemIndex == -1 && stack->initialized == TRUE) {
-        return 0;
     } else {
         return stack->currentItemIndex + 1;
     }
-
 }
