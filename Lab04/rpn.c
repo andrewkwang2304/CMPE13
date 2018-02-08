@@ -1,6 +1,6 @@
 // **** Include libraries here ****
 // Standard libraries
-
+#include <stdio.h>
 //CMPE13 Support Library
 #include "BOARD.h"
 
@@ -36,9 +36,37 @@ int their_main(void)
 
     /******************************** Your custom code goes below here *******************************/
     
+    //struct Stack s;
+    
     // TEST CONSTANTS UNDER HERE
-    int test1Input = 0;
-    int test1ExpOutput = 5;
+    //int counter = 0;
+        // StackInit
+    /*StackInit(*s);
+    if(s.currentItemIndex == -1 && s.initialized == TRUE) {
+        printf("StackInit PASSED: (2/2)");
+    } else if(s.currentItemIndex != -1 && s.initialized == TRUE) {
+        printf("StackInit PASSED: (1/2)");
+    } else if(s.currentItemIndex == -1 && s.initialized != TRUE) {
+        printf("StackInit PASSED: (1/2)");
+    } else {
+        printf("StackInit PASSED: (0/2)");
+    }*/
+    
+        // StackPush
+    /*float SPInput1 = 23.4;
+    float SPInput2 = 76.1;
+    StackPush(&s, SPInput1);
+    if(*(&s + s.currentItemIndex) == 23.4) {
+        counter++;
+    }
+    StackPush(&s, SPInput2);
+    if(s[s.currentItemIndex + 2] == 76.1) {
+        counter++;
+    }
+    printf("StackPush PASSED: (%d/2)", counter);
+    */
+        // StackPop
+    
     
     // CALCULATE RESULT
     
@@ -46,6 +74,15 @@ int their_main(void)
     // OUTPUT TEST RESULTS
 
 
+    // RPN
+    
+    printf("Welcome to the RPN Calculator!\n");
+    int i = 0, size;
+    char arr[500];
+    //char temp;
+    while(TRUE) {
+        scanf("%[^\n]", &arr);
+    }
     /*************************************************************************************************/
 
     // You can never return from main() in an embedded system (one that lacks an operating system).
