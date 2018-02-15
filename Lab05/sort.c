@@ -41,43 +41,56 @@ int main()
 {
     BOARD_Init();
 
-    /**
-     * ----------------------- STARTER CODE --------------------------
-     * This segment of code obtains an unsorted word list, prints it out,
-     * and displays the number of occurrences of each word in the list as
-     * described by UnsortedWordCount() below.
-     */
-        // Initialize an unsorted word list.
-        ListItem *unsortedWordList = NULL;
-        if (!InitializeUnsortedWordList(&unsortedWordList) || !unsortedWordList) {
-            printf("ERROR: Failed to initialize word list\n");
-            while (true);
-        }
-    
-        // Print the list
-        LinkedListPrint(unsortedWordList);
-    
-        // Get the word counts for every string in the list
-        int g = LinkedListSize(unsortedWordList);
-        int wordCount[g];
-    
-        // Print the word count results
-        unsortedWordList = LinkedListGetFirst(unsortedWordList);
-        if (UnsortedWordCount(unsortedWordList, wordCount)) {
-            printf("[%d, %d, %d, %d, %d, %d, %d, %d, %d, %d]\n",
-                   wordCount[0], wordCount[1], wordCount[2],
-                   wordCount[3], wordCount[4], wordCount[5],
-                   wordCount[6], wordCount[7], wordCount[8],
-                   wordCount[9]);
-        } else {
-            printf("ERROR\n");
-        }
-        printf("\n");
+//    /**
+//     * ----------------------- STARTER CODE --------------------------
+//     * This segment of code obtains an unsorted word list, prints it out,
+//     * and displays the number of occurrences of each word in the list as
+//     * described by UnsortedWordCount() below.
+//     */
+//        // Initialize an unsorted word list.
+//        ListItem *unsortedWordList = NULL;
+//        if (!InitializeUnsortedWordList(&unsortedWordList) || !unsortedWordList) {
+//            printf("ERROR: Failed to initialize word list\n");
+//            while (true);
+//        }
+//    
+//        // Print the list
+//        LinkedListPrint(unsortedWordList);
+//    
+//        // Get the word counts for every string in the list
+//        int g = LinkedListSize(unsortedWordList);
+//        int wordCount[g];
+//    
+//        // Print the word count results
+//        unsortedWordList = LinkedListGetFirst(unsortedWordList);
+//        if (UnsortedWordCount(unsortedWordList, wordCount)) {
+//            printf("[%d, %d, %d, %d, %d, %d, %d, %d, %d, %d]\n",
+//                   wordCount[0], wordCount[1], wordCount[2],
+//                   wordCount[3], wordCount[4], wordCount[5],
+//                   wordCount[6], wordCount[7], wordCount[8],
+//                   wordCount[9]);
+//        } else {
+//            printf("ERROR\n");
+//        }
+//        printf("\n");
 
     /******************************** Your custom code goes below here ********************************/
-    printf("Welcome to CMPE13 Lab5 Blank. Please remove before starting.\r\n");
+    ListItem* first = LinkedListNew(dog);
+    ListItem* second = LinkedListCreateAfter(first, pig1);
+    ListItem* third = LinkedListCreateAfter(second, cow);
+    ListItem* secondPointFive = LinkedListCreateAfter(second, bird);
     
-
+    ListItem* result = LinkedListGetFirst(third);
+    
+    LinkedListPrint(first);
+    
+    LinkedListSwapData(secondPointFive, first);
+    
+    LinkedListPrint(second);
+    
+    LinkedListSort(second);
+    
+    LinkedListPrint(first);
 
     /******************************** Your custom code goes above here ********************************/
 

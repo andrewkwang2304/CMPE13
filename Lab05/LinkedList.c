@@ -18,7 +18,7 @@ static int CompareStrings(ListItem *firstItem, ListItem *secondItem);
  */
 ListItem *LinkedListNew(char *data) {
     ListItem *newList = (ListItem*) malloc(sizeof(ListItem));
-    if(*newList == NULL) {
+    if(newList == NULL) {
         return NULL;
     }
     newList->data = data;
@@ -113,11 +113,34 @@ ListItem *LinkedListGetFirst(ListItem *list) {
  * @return A pointer to the newly-malloc()'d ListItem.
  */
 ListItem *LinkedListCreateAfter(ListItem *item, char *data) {
-    ListItem *appendedItem = (ListItem*) malloc(sizeof(ListItem));
-    appendedItem->data = data;
-    appendedItem->previousItem = item;
-    appendedItem->nextItem = item->nextItem;
-    item->nextItem = appendedItem;
+    if(item->data == NULL) {
+        return NULL;
+    }
+    if(item == NULL) { // if no items are on the list
+        item = LinkedListNew(data);
+        if(item == NULL) {
+            return NULL;
+        }
+        return item;
+    } else if(item->nextItem == NULL) { // if tail
+        item->nextItem = LinkedListNew(data);
+        if(item == NULL) {
+            return NULL;
+        }
+        item->nextItem->previousItem = item;
+        item->nextItem->nextItem = NULL;
+        return item->nextItem;
+    } else { // if in between
+        ListItem *appendedItem = LinkedListNew(data);
+        
+        // rearranging the pointers...
+        appendedItem->nextItem = item->nextItem;
+        appendedItem->previousItem = item;
+        item->nextItem = appendedItem;
+        appendedItem->nextItem->previousItem = appendedItem;
+        return appendedItem;
+    }
+    
 }
 
 /**
@@ -158,6 +181,7 @@ int LinkedListSwapData(ListItem *firstItem, ListItem *secondItem) {
  */
 
 int LinkedListSort(ListItem *list) {
+    list = LinkedListGetFirst(list);
     if(list == NULL) {
         return STANDARD_ERROR;
     }
@@ -165,12 +189,13 @@ int LinkedListSort(ListItem *list) {
         return SUCCESS;
     } else {
         ListItem *temp = list->nextItem;  // two vars to compare; list and temp
-        for (list; list->nextItem!=NULL; list=list->nextItem){
-            for(temp; temp!=NULL; temp = temp->nextItem){
-                if(CompareStrings(list,temp)==-1){
+        for (; list->nextItem!=NULL; list=list->nextItem){ // does this move forward prematurely?
+            for(temp = list->nextItem; temp!=NULL; temp = temp->nextItem){
+                if(CompareStrings(list,temp)> 0){
                     LinkedListSwapData(list,temp);
                 }
             }
+            LinkedListPrint(list);
         }
         return SUCCESS;
     }
@@ -192,25 +217,33 @@ int LinkedListPrint(ListItem *list) {
     }
     list = LinkedListGetFirst(list);
     ListItem *temp = list->nextItem;
-    fprintf(stdout, "[%s ", list->data);
-    while(temp->data != NULL) {
+    fprintf(stdout, "[%s", list->data);
+    while(temp != NULL) {
         fprintf(stdout, " %s", temp->data);
         temp = temp->nextItem;
     }
     fprintf(stdout, "]\n");
+    return SUCCESS;
 }
 
 // This is the CompareStrings helper function.
 static int CompareStrings(ListItem *firstItem, ListItem *secondItem) {
-    if(firstItem->data != NULL && secondItem->data != NULL) {
-        if(strlen(firstItem->data) == strlen(secondItem->data)) {
-            return strcmp(firstItem->data, secondItem->data);
-        } else if(strlen(firstItem->data) < strlen(secondItem->data)) {
-            return -1;
-        }
+    if(secondItem->data == NULL) {
         return 1;
+    } else if(firstItem->data != NULL && secondItem->data != NULL) {
+        if(strlen(firstItem->data) > strlen(secondItem->data)) {
+            return 1;
+        }
+        
+        else if(strlen(firstItem->data) == strlen(secondItem->data)) {
+            if(strcmp(firstItem->data, secondItem->data) > 0) {
+                return 1;
+            } else if(strcmp(firstItem->data, secondItem->data) < 0) {
+                return -1;
+            }
+        }
     } else {
         return -1;
     }
-    return 1;
+    return -1;
 }
