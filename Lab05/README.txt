@@ -15,7 +15,7 @@ very straightforward.
 
 The main was a bit of a mess. I still have to fix that.
 
-This lab took me about 6 hours. The hardest part was trudging through
+This lab took me about 9 hours. The hardest part was trudging through
 the CreateAfter linked list function. That was terrifying beyond belief and 
 I pray I never have to do that again, although I probably will when I join
 the workforce. The lab manual definitely gave me enough to
