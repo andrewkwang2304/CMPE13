@@ -18,7 +18,7 @@
 #include "LinkedList.h"
 
 // **** Set any macros or preprocessor directives here ****
-#define LINKED_LIST_TESTING  //comment this out once the LinkedList Library is working
+//#define LINKED_LIST_TESTING  //comment this out once the LinkedList Library is working
 
 // **** Declare any data types here ****
 
@@ -37,60 +37,77 @@ int InitializeUnsortedWordList(ListItem **unsortedWordList);
 int UnsortedWordCount(ListItem *list, int *wordCount);
 int SortedWordCount(ListItem *list, int *wordCount);
 
-int main()
-{
+int main() {
     BOARD_Init();
 
-//    /**
-//     * ----------------------- STARTER CODE --------------------------
-//     * This segment of code obtains an unsorted word list, prints it out,
-//     * and displays the number of occurrences of each word in the list as
-//     * described by UnsortedWordCount() below.
-//     */
-//        // Initialize an unsorted word list.
-//        ListItem *unsortedWordList = NULL;
-//        if (!InitializeUnsortedWordList(&unsortedWordList) || !unsortedWordList) {
-//            printf("ERROR: Failed to initialize word list\n");
-//            while (true);
-//        }
-//    
-//        // Print the list
-//        LinkedListPrint(unsortedWordList);
-//    
-//        // Get the word counts for every string in the list
-//        int g = LinkedListSize(unsortedWordList);
-//        int wordCount[g];
-//    
-//        // Print the word count results
-//        unsortedWordList = LinkedListGetFirst(unsortedWordList);
-//        if (UnsortedWordCount(unsortedWordList, wordCount)) {
-//            printf("[%d, %d, %d, %d, %d, %d, %d, %d, %d, %d]\n",
-//                   wordCount[0], wordCount[1], wordCount[2],
-//                   wordCount[3], wordCount[4], wordCount[5],
-//                   wordCount[6], wordCount[7], wordCount[8],
-//                   wordCount[9]);
-//        } else {
-//            printf("ERROR\n");
-//        }
-//        printf("\n");
+    /**
+     * ----------------------- STARTER CODE --------------------------
+     * This segment of code obtains an unsorted word list, prints it out,
+     * and displays the number of occurrences of each word in the list as
+     * described by UnsortedWordCount() below.
+     */
+    // Initialize an unsorted word list.
+    ListItem *unsortedWordList = NULL;
+    if (!InitializeUnsortedWordList(&unsortedWordList) || !unsortedWordList) {
+        printf("ERROR: Failed to initialize word list\n");
+        while (1);
+    }
+
+    // Print the list
+    LinkedListPrint(unsortedWordList);
+
+    // Get the word counts for every string in the list
+    int g = LinkedListSize(unsortedWordList);
+    int wordCount[g];
+
+    // Print the word count results
+    unsortedWordList = LinkedListGetFirst(unsortedWordList);
+    if (UnsortedWordCount(unsortedWordList, wordCount)) {
+        printf("[%d, %d, %d, %d, %d, %d, %d, %d, %d, %d]\n",
+                wordCount[0], wordCount[1], wordCount[2],
+                wordCount[3], wordCount[4], wordCount[5],
+                wordCount[6], wordCount[7], wordCount[8],
+                wordCount[9]);
+    } else {
+        printf("ERROR\n");
+    }
+    printf("\n");
 
     /******************************** Your custom code goes below here ********************************/
-    ListItem* first = LinkedListNew(dog);
-    ListItem* second = LinkedListCreateAfter(first, pig1);
-    ListItem* third = LinkedListCreateAfter(second, cow);
-    ListItem* secondPointFive = LinkedListCreateAfter(second, bird);
-    
-    ListItem* result = LinkedListGetFirst(third);
-    
-    LinkedListPrint(first);
-    
-    LinkedListSwapData(secondPointFive, first);
-    
-    LinkedListPrint(second);
-    
-    LinkedListSort(second);
-    
-    LinkedListPrint(first);
+
+    ListItem *finalList = NULL;
+    if (!InitializeUnsortedWordList(&finalList) || !finalList) {
+        printf("ERROR: Failed to initialize word list\n");
+        while (1);
+    }
+
+    LinkedListSort(finalList);
+    LinkedListPrint(finalList);
+    int arr[LinkedListSize(unsortedWordList)];
+    SortedWordCount(finalList, arr);
+
+    printf("[");
+    int i;
+    for (i = 0; i < LinkedListSize(finalList); i++) {
+        printf(" %d", arr[i]);
+    }
+    printf("]");
+
+    ListItem *temp = finalList;
+
+    while (finalList != NULL) {
+        temp = temp->nextItem;
+        LinkedListRemove(finalList);
+        finalList = temp;
+    }
+
+    temp = unsortedWordList;
+
+    while (temp->nextItem != NULL) {
+        temp = temp->nextItem;
+        LinkedListRemove(unsortedWordList);
+        unsortedWordList = temp;
+    }
 
     /******************************** Your custom code goes above here ********************************/
 
@@ -100,6 +117,7 @@ int main()
 }
 
 #ifndef LINKED_LIST_TESTING
+
 /**
  * This functions takes in the head of an unsorted list of words, and an array to store the number
  * of occurrences of each word.  The first time a word appears, the number of occurrences of that
@@ -120,8 +138,7 @@ int main()
  *                  at least as big as the linked list pointed to be `list` is.
  * @return Either SUCCESS or STANDARD_ERROR if the head of the doubly-linked list isn't passed.
  */
-int UnsortedWordCount(ListItem *list, int *wordCount)
-{
+int UnsortedWordCount(ListItem *list, int *wordCount) {
     // Make sure the head of the list was given.
     if (list->previousItem != NULL) {
         return STANDARD_ERROR;
@@ -192,8 +209,7 @@ int UnsortedWordCount(ListItem *list, int *wordCount)
  * @param unsortedWordList[out] Where to store the pointer to the head of the list.
  * @return SUCCESS if it succeeds, STANDARD_ERROR if it fails to allocate necessary memory.
  */
-int InitializeUnsortedWordList(ListItem **unsortedWordList)
-{
+int InitializeUnsortedWordList(ListItem **unsortedWordList) {
     ListItem *tmp = LinkedListNew(crab);
     if (!tmp) {
         return STANDARD_ERROR;
@@ -249,5 +265,34 @@ int InitializeUnsortedWordList(ListItem **unsortedWordList)
  *                  at least as big as the linked list pointed to be `list` is.
  * @return Either SUCCESS or STANDARD_ERROR if the head of the doubly-linked list isn't passed.
  */
+int SortedWordCount(ListItem *list, int *wordCount) {
+    if (list->previousItem != NULL) {
+        return STANDARD_ERROR;
+    }
+
+    int i, counter = 0;
+    ListItem *newItem;
+    for (list = LinkedListGetFirst(list); list != NULL; list = list->nextItem) {
+        if (list->data == NULL) {
+            wordCount[i] = 0;
+            i++;
+            continue;
+        } else {
+            for (newItem = list->nextItem; newItem != NULL; newItem = newItem->nextItem) {
+                if (newItem->data == list->data) {
+                    counter++;
+                }
+            }
+            wordCount[i] = counter;
+
+            for (newItem = list->nextItem; newItem != NULL; newItem = newItem->nextItem) {
+                if (newItem->data == list->data) {
+                    counter = -counter;
+                }
+            }
+        }
+    }
+    return SUCCESS;
+}
 
 #endif

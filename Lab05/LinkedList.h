@@ -20,9 +20,9 @@
  * data stored in a list item must first be allocated.
  */
 typedef struct ListItem {
-	struct ListItem *previousItem;
-	struct ListItem *nextItem;
-	char *data;
+    struct ListItem *previousItem;
+    struct ListItem *nextItem;
+    char *data;
 } ListItem;
 
 /**
