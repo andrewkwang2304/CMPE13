@@ -12,12 +12,22 @@
 
 
 // **** Set macros and preprocessor directives ****
+#define LEFT 1
+#define RIGHT 0
+#define TRUE 1
+#define FALSE 0
 
 // **** Declare any datatypes here ****
+typedef struct {
+    uint8_t event;
+    uint8_t value;
+}AdcResult;
 
 // **** Define global, module-level, or external variables here ****
+AdcResult timerData;
 
 // **** Declare function prototypes ****
+
 
 int main(void)
 {
@@ -45,7 +55,7 @@ int main(void)
     /***************************************************************************************************
      * Your code goes in between this comment and the following one with asterisks.
      **************************************************************************************************/
-    printf("Welcome to the Lab 6 Part 2 blank. Please remove before starting.");
+    
 
 
     /***************************************************************************************************
@@ -66,6 +76,12 @@ void __ISR(_ADC_VECTOR, IPL2AUTO) AdcHandler(void)
 {
     // Clear the interrupt flag.
     INTClearFlag(INT_AD1);
-
-
+    
+    // find the average value
+    uint16_t average = (ADC1BUF0 + ADC1BUF1 + ADC1BUF2 + ADC1BUF3 + ADC1BUF4 + 
+        ADC1BUF5 + ADC1BUF6 + ADC1BUF7) / 8;
+    if(average != timerData.value) {
+        timerData.event = TRUE;
+        timerData.value = average;
+    }
 }
