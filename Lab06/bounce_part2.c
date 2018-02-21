@@ -9,7 +9,7 @@
 #include <plib.h>
 
 // User libraries
-
+#include "Oled.h"
 
 // **** Set macros and preprocessor directives ****
 #define LEFT 1
@@ -55,6 +55,7 @@ int main(void)
     /***************************************************************************************************
      * Your code goes in between this comment and the following one with asterisks.
      **************************************************************************************************/
+    OledInit();
     
 
 
