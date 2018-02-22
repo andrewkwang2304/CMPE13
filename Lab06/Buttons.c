@@ -44,7 +44,7 @@ uint8_t ButtonsCheckEvents(void) {
     if (BUTTON_STATES() & BUTTON_STATE_3) {
         returnState |= BUTTON_EVENT_3DOWN;
         puts("Button 3 is pressed\n");
-    }
+    }  
     if (BUTTON_STATES() & BUTTON_STATE_4) {
         returnState |= BUTTON_EVENT_4DOWN;
         puts("Button 4 is pressed\n");
