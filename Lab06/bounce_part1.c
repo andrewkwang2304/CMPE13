@@ -18,15 +18,18 @@
 #define FALSE 0
 
 // **** Declare any datatypes here ****
+
 typedef struct {
     uint8_t event;
     uint8_t value;
-}TimerResult;
+} TimerResult;
 
 // **** Define global, module-level, or external variables here ****
 TimerResult timerData;
 
 // **** Declare function prototypes ****
+int ledSpeed(void);
+void __ISR(_TIMER_1_VECTOR, IPL4AUTO) Timer1Handler(void);
 
 int main(void) {
     BOARD_Init();
@@ -45,39 +48,36 @@ int main(void) {
      * Your code goes in between this comment and the following one with asterisks.
      **************************************************************************************************/
     // still needs to implement switches and stuff.
-    
+
     LEDS_INIT();
     int LED = 0x0001; // position
-    int direction = RIGHT; // sets LED direction to the right. This will help
-                           // determine the direction of the LED in if statements.
+    int direction = LEFT; // sets LED direction to the right. This will help
+    // determine the direction of the LED in if statements.
     timerData.event = FALSE;
     timerData.value = 0;
-    while(1) {
-        LEDS_SET(LED); // sets LED to the current one.
-        // check left side
-        if(direction == LEFT && LED == 0x0001) { 
-            direction = RIGHT;
-            LED = 0x0002;
-        }
-        // check right side
-        // 0x0080 is the hex equivalent of 0b10000000
-        else if(direction == RIGHT && LED == 0x0080) { 
-            direction = LEFT;
-            LED = 0x0040;
-        }
-        // else, just shift left or right
-        else if(timerData.event = TRUE) {
-            if(direction == LEFT) {
-                LED >>= 1;
-            } else {
+
+    // main loop start
+    while (1) {
+        if (timerData.event == TRUE) {
+            LEDS_SET(LED); // sets LED to the current one.
+
+            // shift left if direction flag is left
+            if (direction == LEFT) {
                 LED <<= 1;
+                if (LED == 0x0080) { // if on the left border, change direction
+                    direction = RIGHT;
+                }
+            }                
+            // shift right if direction flag is right
+            else if (direction == RIGHT) {
+                LED >>= 1;
+                if (LED == 0x0001) {
+                    direction = LEFT; // if on the right border, change direction
+                }
             }
-            timerData.event--;
+            timerData.event = 0;
         }
     }
-    
-    
-
     /***************************************************************************************************
      * Your code goes in between this comment and the preceding one with asterisks
      **************************************************************************************************/
@@ -96,7 +96,7 @@ void __ISR(_TIMER_1_VECTOR, IPL4AUTO) Timer1Handler(void) {
     // Clear the interrupt flag.
     INTClearFlag(INT_T1);
     (timerData.value)++;
-    if(timerData.value > SWITCH_STATES()) {
+    if (timerData.value >= SWITCH_STATES()) {
         timerData.event = TRUE;
         timerData.value = 0;
     }

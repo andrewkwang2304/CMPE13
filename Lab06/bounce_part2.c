@@ -16,11 +16,12 @@
 #define RIGHT 0
 #define TRUE 1
 #define FALSE 0
+#define MAX_SIZE 64
 
 // **** Declare any datatypes here ****
 typedef struct {
-    uint8_t event;
-    uint8_t value;
+    uint16_t event;
+    uint16_t value;
 }AdcResult;
 
 // **** Define global, module-level, or external variables here ****
@@ -29,8 +30,7 @@ AdcResult timerData;
 // **** Declare function prototypes ****
 
 
-int main(void)
-{
+int main(void) {
     BOARD_Init();
 
     // Enable interrupts for the ADC
@@ -56,8 +56,25 @@ int main(void)
      * Your code goes in between this comment and the following one with asterisks.
      **************************************************************************************************/
     OledInit();
+    //OledDrawString("test");
+    //OledUpdate();
     
-
+    timerData.event = FALSE;
+    timerData.value = 0;
+    char meterArr[MAX_SIZE]; // stores the string for printing.
+    float meterResults; // will store the number on the potentiometer.
+    while(1) {
+        if(timerData.event) {
+            timerData.event = FALSE;
+            meterResults = (timerData.value * 100.0)/1023.0;
+            sprintf(meterArr, "Potentiometer values:\n%d\n%d%%  ", timerData.value, (int) meterResults);
+            OledDrawString(meterArr); // print the potentiometer string array
+            OledUpdate();
+            timerData.event = FALSE;
+        }
+    }
+    
+    
 
     /***************************************************************************************************
      * Your code goes in between this comment and the preceding one with asterisks
@@ -73,8 +90,7 @@ int main(void)
  * AdcResult struct. If this averaged ADC value has changed between this run and the last one, the
  * event flag in the AdcResult struct is set to true.
  */
-void __ISR(_ADC_VECTOR, IPL2AUTO) AdcHandler(void)
-{
+void __ISR(_ADC_VECTOR, IPL2AUTO) AdcHandler(void) {
     // Clear the interrupt flag.
     INTClearFlag(INT_AD1);
     

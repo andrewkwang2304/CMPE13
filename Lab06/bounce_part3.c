@@ -9,7 +9,7 @@
 #include <plib.h>
 
 // User libraries
-
+#include "Buttons.h"
 
 // **** Set macros and preprocessor directives ****
 
@@ -36,7 +36,7 @@ int main(void)
     /***************************************************************************************************
      * Your code goes in between this comment and the following one with asterisks.
      **************************************************************************************************/
-    printf("Welcome to the Lab 6 Part 3 blank. Please remove before starting.");
+    printf("%u\n", ButtonsCheckEvents());
 
 
     /***************************************************************************************************
