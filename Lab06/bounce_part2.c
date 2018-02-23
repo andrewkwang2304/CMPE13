@@ -66,6 +66,7 @@ int main(void) {
             adcData.event = FALSE; // resets the event
             meterResults = (adcData.value * 100.0) / 1023.0; // will convert the result into a readable output.
             sprintf(meterArr, "Potentiometer values:\n%d\n%d%%", adcData.value, (int) meterResults);
+            OledClear(OLED_COLOR_BLACK);
             OledDrawString(meterArr); // print the potentiometer string array
             OledUpdate();
             adcData.event = FALSE; // reset again.
