@@ -27,36 +27,29 @@ void ButtonsInit() {
 }
 
 uint8_t ButtonsCheckEvents(void) {
-    uint8_t returnState;
+    uint8_t returnState; // will store the current state of LEDs
 
-    //printf("===============\n");
-
+    // The following if-statements will OR the proper BUTTON_EVENT to
+    // the returnState. This will be returned at the bottom.
     if (BUTTON_STATES() & BUTTON_STATE_1) {
         returnState |= BUTTON_EVENT_1DOWN;
-        //printf("Button 1 is pressed\n");
     } else {
         returnState |= BUTTON_EVENT_1UP;
     }
     if (BUTTON_STATES() & BUTTON_STATE_2) {
         returnState |= BUTTON_EVENT_2DOWN;
-        //printf("Button 2 is pressed\n");
     } else {
         returnState |= BUTTON_EVENT_2UP;
     }
     if (BUTTON_STATES() & BUTTON_STATE_3) {
         returnState |= BUTTON_EVENT_3DOWN;
-        //printf("Button 3 is pressed\n");
     } else {
         returnState |= BUTTON_EVENT_3UP;
     }
     if (BUTTON_STATES() & BUTTON_STATE_4) {
         returnState |= BUTTON_EVENT_4DOWN;
-        //printf("Button 4 is pressed\n");
     } else {
         returnState |= BUTTON_EVENT_4UP;
     }
-
-    //printf("===============\n");
-
     return returnState;
 }

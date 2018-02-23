@@ -63,12 +63,12 @@ int main(void) {
     float meterResults; // will store the number on the potentiometer.
     while (1) {
         if (adcData.event) {
-            adcData.event = FALSE;
-            meterResults = (adcData.value * 100.0) / 1023.0;
+            adcData.event = FALSE; // resets the event
+            meterResults = (adcData.value * 100.0) / 1023.0; // will convert the result into a readable output.
             sprintf(meterArr, "Potentiometer values:\n%d\n%d%%", adcData.value, (int) meterResults);
             OledDrawString(meterArr); // print the potentiometer string array
             OledUpdate();
-            adcData.event = FALSE;
+            adcData.event = FALSE; // reset again.
         }
     }
 
@@ -95,7 +95,7 @@ void __ISR(_ADC_VECTOR, IPL2AUTO) AdcHandler(void) {
     // find the average value
     uint16_t average = (ADC1BUF0 + ADC1BUF1 + ADC1BUF2 + ADC1BUF3 + ADC1BUF4 +
             ADC1BUF5 + ADC1BUF6 + ADC1BUF7) / 8;
-    if (average != adcData.value) {
+    if (average != adcData.value) { // if the average is not equal to the data value...
         adcData.event = TRUE;
         adcData.value = average;
     }

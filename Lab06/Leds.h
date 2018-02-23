@@ -19,7 +19,7 @@
 #define LEDS_GET() LATE
 
 #define LEDS_SET(x) (LATE = (x))
-    
+
 
 #endif	/* LED_H */
 

@@ -60,14 +60,13 @@ int main(void) {
     while (1) {
         if (timerData.event) {
             LEDS_SET(LED); // sets LED to the current one.
-            
+
             if (direction == LEFT) { // shift left if direction flag is left
                 LED <<= 1;
                 if (LED == 0x0080) { // if on the left border, change direction
                     direction = RIGHT;
                 }
-            }
-            else if (direction == RIGHT) { // shift right if direction flag is right
+            } else if (direction == RIGHT) { // shift right if direction flag is right
                 LED >>= 1;
                 if (LED == 0x0001) {
                     direction = LEFT; // if on the right border, change direction
@@ -94,7 +93,7 @@ void __ISR(_TIMER_1_VECTOR, IPL4AUTO) Timer1Handler(void) {
     // Clear the interrupt flag.
     INTClearFlag(INT_T1);
     (timerData.value)++;
-    if (timerData.value >= SWITCH_STATES()) {
+    if (timerData.value >= SWITCH_STATES()) { // checking the value with the switch state. If greater, then reset value.
         timerData.event = TRUE;
         timerData.value = 0;
     }
