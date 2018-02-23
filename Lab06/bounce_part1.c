@@ -58,24 +58,22 @@ int main(void) {
 
     // main loop start
     while (1) {
-        if (timerData.event == TRUE) {
+        if (timerData.event) {
             LEDS_SET(LED); // sets LED to the current one.
-
-            // shift left if direction flag is left
-            if (direction == LEFT) {
+            
+            if (direction == LEFT) { // shift left if direction flag is left
                 LED <<= 1;
                 if (LED == 0x0080) { // if on the left border, change direction
                     direction = RIGHT;
                 }
-            }                
-            // shift right if direction flag is right
-            else if (direction == RIGHT) {
+            }
+            else if (direction == RIGHT) { // shift right if direction flag is right
                 LED >>= 1;
                 if (LED == 0x0001) {
                     direction = LEFT; // if on the right border, change direction
                 }
             }
-            timerData.event = 0;
+            timerData.event = FALSE;
         }
     }
     /***************************************************************************************************

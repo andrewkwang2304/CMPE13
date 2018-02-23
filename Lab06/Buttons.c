@@ -27,28 +27,36 @@ void ButtonsInit() {
 }
 
 uint8_t ButtonsCheckEvents(void) {
-    uint8_t sample1;
-    uint8_t sample2;
-    uint8_t sample3;
-    uint8_t sample4;
     uint8_t returnState;
+
+    //printf("===============\n");
 
     if (BUTTON_STATES() & BUTTON_STATE_1) {
         returnState |= BUTTON_EVENT_1DOWN;
-        puts("Button 1 is pressed\n");
+        //printf("Button 1 is pressed\n");
+    } else {
+        returnState |= BUTTON_EVENT_1UP;
     }
     if (BUTTON_STATES() & BUTTON_STATE_2) {
         returnState |= BUTTON_EVENT_2DOWN;
-        puts("Button 2 is pressed\n");
+        //printf("Button 2 is pressed\n");
+    } else {
+        returnState |= BUTTON_EVENT_2UP;
     }
     if (BUTTON_STATES() & BUTTON_STATE_3) {
         returnState |= BUTTON_EVENT_3DOWN;
-        puts("Button 3 is pressed\n");
-    }  
+        //printf("Button 3 is pressed\n");
+    } else {
+        returnState |= BUTTON_EVENT_3UP;
+    }
     if (BUTTON_STATES() & BUTTON_STATE_4) {
         returnState |= BUTTON_EVENT_4DOWN;
-        puts("Button 4 is pressed\n");
+        //printf("Button 4 is pressed\n");
+    } else {
+        returnState |= BUTTON_EVENT_4UP;
     }
-    
+
+    //printf("===============\n");
+
     return returnState;
 }

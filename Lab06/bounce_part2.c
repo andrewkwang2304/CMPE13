@@ -12,23 +12,21 @@
 #include "Oled.h"
 
 // **** Set macros and preprocessor directives ****
-#define LEFT 1
-#define RIGHT 0
 #define TRUE 1
 #define FALSE 0
 #define MAX_SIZE 64
 
 // **** Declare any datatypes here ****
+
 typedef struct {
     uint16_t event;
     uint16_t value;
-}AdcResult;
+} AdcResult;
 
 // **** Define global, module-level, or external variables here ****
-AdcResult timerData;
+AdcResult adcData;
 
 // **** Declare function prototypes ****
-
 
 int main(void) {
     BOARD_Init();
@@ -58,23 +56,23 @@ int main(void) {
     OledInit();
     //OledDrawString("test");
     //OledUpdate();
-    
-    timerData.event = FALSE;
-    timerData.value = 0;
+
+    adcData.event = FALSE;
+    adcData.value = 0;
     char meterArr[MAX_SIZE]; // stores the string for printing.
     float meterResults; // will store the number on the potentiometer.
-    while(1) {
-        if(timerData.event) {
-            timerData.event = FALSE;
-            meterResults = (timerData.value * 100.0)/1023.0;
-            sprintf(meterArr, "Potentiometer values:\n%d\n%d%%  ", timerData.value, (int) meterResults);
+    while (1) {
+        if (adcData.event) {
+            adcData.event = FALSE;
+            meterResults = (adcData.value * 100.0) / 1023.0;
+            sprintf(meterArr, "Potentiometer values:\n%d\n%d%%", adcData.value, (int) meterResults);
             OledDrawString(meterArr); // print the potentiometer string array
             OledUpdate();
-            timerData.event = FALSE;
+            adcData.event = FALSE;
         }
     }
-    
-    
+
+
 
     /***************************************************************************************************
      * Your code goes in between this comment and the preceding one with asterisks
@@ -93,12 +91,12 @@ int main(void) {
 void __ISR(_ADC_VECTOR, IPL2AUTO) AdcHandler(void) {
     // Clear the interrupt flag.
     INTClearFlag(INT_AD1);
-    
+
     // find the average value
-    uint16_t average = (ADC1BUF0 + ADC1BUF1 + ADC1BUF2 + ADC1BUF3 + ADC1BUF4 + 
-        ADC1BUF5 + ADC1BUF6 + ADC1BUF7) / 8;
-    if(average != timerData.value) {
-        timerData.event = TRUE;
-        timerData.value = average;
+    uint16_t average = (ADC1BUF0 + ADC1BUF1 + ADC1BUF2 + ADC1BUF3 + ADC1BUF4 +
+            ADC1BUF5 + ADC1BUF6 + ADC1BUF7) / 8;
+    if (average != adcData.value) {
+        adcData.event = TRUE;
+        adcData.value = average;
     }
 }

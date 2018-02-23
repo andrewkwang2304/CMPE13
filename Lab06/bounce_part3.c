@@ -10,17 +10,26 @@
 
 // User libraries
 #include "Buttons.h"
+#include "Leds.h"
 
 // **** Set macros and preprocessor directives ****
+#define TRUE 1
+#define FALSE 0
 
 // **** Declare any datatypes here ****
 
+typedef struct {
+    uint8_t event;
+    uint8_t value;
+} ButtonResult;
+
 // **** Define global, module-level, or external variables here ****
+ButtonResult buttonData;
 
 // **** Declare function prototypes ****
+void SetLED(uint8_t bitmask);
 
-int main(void)
-{
+int main(void) {
     BOARD_Init();
 
     // Configure Timer 1 using PBCLK as input. This default period will make the LEDs blink at a
@@ -36,9 +45,65 @@ int main(void)
     /***************************************************************************************************
      * Your code goes in between this comment and the following one with asterisks.
      **************************************************************************************************/
-    printf("%u\n", ButtonsCheckEvents());
 
-
+    // Initialize necessary components.
+    ButtonsInit();
+    LEDS_INIT();
+    buttonData.event = FALSE;
+    buttonData.value = 0;
+    int switchPosition;
+    int sPosTemp;
+    int mask;
+    
+    while(1) {
+        //how does converting the uint8 value into an array sound?
+        if(buttonData.event) {
+            switchPosition = SWITCH_STATES();
+            sPosTemp = SWITCH_STATE_SW1 & switchPosition;
+            
+            if(sPosTemp && buttonData.value == BUTTON_EVENT_1DOWN) {
+                mask = 0b00000011;
+                SetLED(mask);
+            } else if(!sPosTemp && buttonData.value == BUTTON_EVENT_1UP) {
+                mask = 0b00000011;
+                SetLED(mask);
+            }
+            
+            sPosTemp = SWITCH_STATE_SW2 & switchPosition;
+            
+            if(sPosTemp && buttonData.value == BUTTON_EVENT_2DOWN) {
+                mask = 0b00001100;
+                SetLED(mask);
+            } else if(!sPosTemp && buttonData.value == BUTTON_EVENT_2UP) {
+                mask = 0b00001100;
+                SetLED(mask);
+            }
+            
+            sPosTemp = SWITCH_STATE_SW3 & switchPosition;
+            
+            if(sPosTemp && buttonData.value == BUTTON_EVENT_3DOWN) {
+                mask = 0b00110000;
+                SetLED(mask);
+            } else if(!sPosTemp && buttonData.value == BUTTON_EVENT_3UP) {
+                mask = 0b00110000;
+                SetLED(mask);
+            }
+            
+            sPosTemp = SWITCH_STATE_SW4 & switchPosition;
+            
+            if(sPosTemp && buttonData.value == BUTTON_EVENT_4DOWN) {
+                mask = 0b11000000;
+                SetLED(mask);
+            } else if(!sPosTemp && buttonData.value == BUTTON_EVENT_4UP) {
+                mask = 0b11000000;
+                SetLED(mask);
+            }
+            
+            buttonData.event = FALSE;
+        }
+    }
+    
+    
     /***************************************************************************************************
      * Your code goes in between this comment and the preceding one with asterisks
      **************************************************************************************************/
@@ -50,10 +115,22 @@ int main(void)
  * This is the interrupt for the Timer1 peripheral. It checks for button events and stores them in a
  * module-level variable.
  */
-void __ISR(_TIMER_1_VECTOR, IPL4AUTO) Timer1Handler(void)
-{
+void __ISR(_TIMER_1_VECTOR, IPL4AUTO) Timer1Handler(void) {
     // Clear the interrupt flag.
     INTClearFlag(INT_T1);
+    buttonData.value = ButtonsCheckEvents();
+    
+    if(buttonData.value) {
+        buttonData.event = TRUE;
+    }
 
+}
 
+void SetLED(uint8_t bitmask) {
+    uint8_t ledGet = LEDS_GET();
+    uint8_t temp = ledGet | bitmask;
+    if(temp == ledGet) {
+        temp ^= bitmask;
+    }
+    LEDS_SET(temp);
 }
