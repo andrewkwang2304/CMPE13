@@ -56,47 +56,64 @@ int main(void) {
     int mask;
     
     while(1) {
-        //how does converting the uint8 value into an array sound?
         if(buttonData.event) {
+            
+            
             switchPosition = SWITCH_STATES();
             sPosTemp = SWITCH_STATE_SW1 & switchPosition;
             
-            if(sPosTemp && buttonData.value == BUTTON_EVENT_1DOWN) {
-                mask = 0b00000011;
-                SetLED(mask);
-            } else if(!sPosTemp && buttonData.value == BUTTON_EVENT_1UP) {
-                mask = 0b00000011;
-                SetLED(mask);
+            if(sPosTemp) { // if switch is up.
+                if((buttonData.value & 0b11) > 1) { // when > 1, it is on.
+                    mask = 0b00000011;
+                    SetLED(mask);
+                }
+            } else if(!sPosTemp) {
+                if((buttonData.value & 0b11) > 1) {
+                    mask = 0b00000011;
+                    SetLED(mask);
+                }
             }
             
             sPosTemp = SWITCH_STATE_SW2 & switchPosition;
             
-            if(sPosTemp && buttonData.value == BUTTON_EVENT_2DOWN) {
-                mask = 0b00001100;
-                SetLED(mask);
-            } else if(!sPosTemp && buttonData.value == BUTTON_EVENT_2UP) {
-                mask = 0b00001100;
-                SetLED(mask);
+            if(sPosTemp) { // if switch is up.
+                if((buttonData.value & 0b1100) > 0b100) {
+                    mask = 0b00001100;
+                    SetLED(mask);
+                }
+            } else if(!sPosTemp) {
+                if((buttonData.value & 0b1100) > 0b100) {
+                    mask = 0b00001100;
+                    SetLED(mask);
+                }
             }
             
             sPosTemp = SWITCH_STATE_SW3 & switchPosition;
             
-            if(sPosTemp && buttonData.value == BUTTON_EVENT_3DOWN) {
-                mask = 0b00110000;
-                SetLED(mask);
-            } else if(!sPosTemp && buttonData.value == BUTTON_EVENT_3UP) {
-                mask = 0b00110000;
-                SetLED(mask);
+            if(sPosTemp) { // if switch is up.
+                if((buttonData.value & 0b110000) > 0b10000) {
+                    mask = 0b00110000;
+                    SetLED(mask);
+                }
+            } else if(!sPosTemp) {
+                if((buttonData.value & 0b110000) > 0b10000) {
+                    mask = 0b00110000;
+                    SetLED(mask);
+                }
             }
             
             sPosTemp = SWITCH_STATE_SW4 & switchPosition;
             
-            if(sPosTemp && buttonData.value == BUTTON_EVENT_4DOWN) {
-                mask = 0b11000000;
-                SetLED(mask);
-            } else if(!sPosTemp && buttonData.value == BUTTON_EVENT_4UP) {
-                mask = 0b11000000;
-                SetLED(mask);
+            if(sPosTemp) { // if switch is up.
+                if((buttonData.value & 0b11000000) > 0b1000000) {
+                    mask = 0b11000000;
+                    SetLED(mask);
+                }
+            } else if(!sPosTemp) { // if switch is down.
+                if((buttonData.value & 0b11000000) > 0b1000000) {
+                    mask = 0b11000000;
+                    SetLED(mask);
+                }
             }
             
             buttonData.event = FALSE;

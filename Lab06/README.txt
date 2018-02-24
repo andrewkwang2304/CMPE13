@@ -50,3 +50,9 @@ the concept of searching for the transition rather than the consistent stream of
 I had no clue I had to create a history until the TA's explained it.
 
 All in all, decent lab. I hope a get a better score.
+
+LATE HOURS EDIT:
+MY BUTTON.C WORKS!!!!
+Part 3 doesn't though. They light up, but for some reason, when I hold the buttons down,
+they go into this blinked on or off state where it's a 50/50 chance that you could get
+on or off. Well, I'll take this for now.
