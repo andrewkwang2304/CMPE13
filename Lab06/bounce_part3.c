@@ -54,73 +54,73 @@ int main(void) {
     int switchPosition;
     int sPosTemp;
     int mask;
-    
-    while(1) {
-        if(buttonData.event) {
-            
-            
+
+    while (1) {
+        if (buttonData.event) {
+
+
             switchPosition = SWITCH_STATES();
-            sPosTemp = SWITCH_STATE_SW1 & switchPosition;
-            
-            if(sPosTemp) { // if switch is up.
-                if((buttonData.value & 0b11) > 1) { // when > 1, it is on.
+            sPosTemp = SWITCH_STATE_SW1 & switchPosition; // compares the SWITCH STATE with the current switch position.
+
+            if (sPosTemp) { // if switch is up.
+                if ((buttonData.value & 0b11) > 1) { // when > 1, it is on.
                     mask = 0b00000011;
                     SetLED(mask);
                 }
-            } else if(!sPosTemp) {
-                if((buttonData.value & 0b11) > 1) {
+            } else if (!sPosTemp) { // if switch is down.
+                if ((buttonData.value & 0b11) > 1) {
                     mask = 0b00000011;
                     SetLED(mask);
                 }
             }
-            
-            sPosTemp = SWITCH_STATE_SW2 & switchPosition;
-            
-            if(sPosTemp) { // if switch is up.
-                if((buttonData.value & 0b1100) > 0b100) {
+
+            sPosTemp = SWITCH_STATE_SW2 & switchPosition; // adjust sPosTemp for the next switch.
+
+            if (sPosTemp) { // if switch is up.
+                if ((buttonData.value & 0b1100) > 0b100) {
                     mask = 0b00001100;
                     SetLED(mask);
                 }
-            } else if(!sPosTemp) {
-                if((buttonData.value & 0b1100) > 0b100) {
+            } else if (!sPosTemp) {
+                if ((buttonData.value & 0b1100) > 0b100) {
                     mask = 0b00001100;
                     SetLED(mask);
                 }
             }
-            
-            sPosTemp = SWITCH_STATE_SW3 & switchPosition;
-            
-            if(sPosTemp) { // if switch is up.
-                if((buttonData.value & 0b110000) > 0b10000) {
+
+            sPosTemp = SWITCH_STATE_SW3 & switchPosition; // adjust sPosTemp for the next switch.
+
+            if (sPosTemp) { // if switch is up.
+                if ((buttonData.value & 0b110000) > 0b10000) {
                     mask = 0b00110000;
                     SetLED(mask);
                 }
-            } else if(!sPosTemp) {
-                if((buttonData.value & 0b110000) > 0b10000) {
+            } else if (!sPosTemp) {
+                if ((buttonData.value & 0b110000) > 0b10000) {
                     mask = 0b00110000;
                     SetLED(mask);
                 }
             }
-            
-            sPosTemp = SWITCH_STATE_SW4 & switchPosition;
-            
-            if(sPosTemp) { // if switch is up.
-                if((buttonData.value & 0b11000000) > 0b1000000) {
+
+            sPosTemp = SWITCH_STATE_SW4 & switchPosition; // adjust sPosTemp for the next switch.
+
+            if (sPosTemp) { // if switch is up.
+                if ((buttonData.value & 0b11000000) > 0b1000000) {
                     mask = 0b11000000;
                     SetLED(mask);
                 }
-            } else if(!sPosTemp) { // if switch is down.
-                if((buttonData.value & 0b11000000) > 0b1000000) {
+            } else if (!sPosTemp) { // if switch is down.
+                if ((buttonData.value & 0b11000000) > 0b1000000) {
                     mask = 0b11000000;
                     SetLED(mask);
                 }
             }
-            
+
             buttonData.event = FALSE;
         }
     }
-    
-    
+
+
     /***************************************************************************************************
      * Your code goes in between this comment and the preceding one with asterisks
      **************************************************************************************************/
@@ -136,18 +136,18 @@ void __ISR(_TIMER_1_VECTOR, IPL4AUTO) Timer1Handler(void) {
     // Clear the interrupt flag.
     INTClearFlag(INT_T1);
     buttonData.value = ButtonsCheckEvents();
-    
-    if(buttonData.value) {
+
+    if (buttonData.value) {
         buttonData.event = TRUE;
     }
 
 }
 
 void SetLED(uint8_t bitmask) {
-    uint8_t ledGet = LEDS_GET();
+    uint8_t ledGet = LEDS_GET(); // get LEDS.
     uint8_t temp = ledGet | bitmask;
-    if(temp == ledGet) {
-        temp ^= bitmask;
+    if (temp == ledGet) {
+        temp ^= bitmask; // XOR temp with bitmask. This will allow for toggle.
     }
     LEDS_SET(temp);
 }
