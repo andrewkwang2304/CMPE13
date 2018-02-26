@@ -70,6 +70,7 @@ typedef struct {
 ovenData oven;
 TimerInterrupt interrupts;
 ButtonEventFlags buttonEvent;
+uint8_t FRC = 0; // acronym for free running counter. It's for the 5Hz interrupt.
 
 
 // Configuration Bit settings
@@ -130,21 +131,28 @@ int main() {
             case START:
                 if (AdcChanged()) {
                     if(oven.inputState == TIME) {
-                        oven.cookInitTime = AdcRead();
+                        oven.cookInitTime = AdcRead(); // what exactly is this ten bit number being returned?
                     }
                 }
                 if (buttonEvent & BUTTON_EVENT_4DOWN) {
-
+                    TIMER_2HZ_RESET(); // Reset 2Hz Timer
+                    interrupts.event2Hz = FALSE; // reset interrupt
+                    // how do you save the initial start time? AdcRead??
+                    oven.ovenState = COUNTDOWN; // Turn oven on.
+                    buttonEvent = BUTTON_EVENT_NONE; // Clear button event.
+                    OledUpdate(); // update display...?
                 } else if (buttonEvent & BUTTON_EVENT_3DOWN) {
-
+                    // store free running time
+                    buttonEvent = BUTTON_EVENT_NONE;
+                    oven.ovenState = PENDING_SELECTOR_CHANGE;
                 }
                 // eventually, oven.ovenState will equal COUNTDOWN or PENDING_SELECTOR_CHANGE
                 break;
             case COUNTDOWN:
-
+                if()
                 break;
             case PENDING_SELECTOR_CHANGE:
-
+                // if button counter < LONG_PRESS && BUTTON_EVENT_3UP
                 break;
             case PENDING_RESET:
 
@@ -156,24 +164,29 @@ int main() {
     }
 
 
-
-
     /***************************************************************************************************
      * Your code goes in between this comment and the preceding one with asterisks
      **************************************************************************************************/
     while (1);
 }
 
+void printOven(void) {
+    // three if statements followed by just a regular print.
+    
+}
+
 void __ISR(_TIMER_1_VECTOR, ipl4auto) TimerInterrupt2Hz(void) {
     // Clear the interrupt flag.
     IFS0CLR = 1 << 4;
     interrupts.event2Hz = TRUE;
+    
 }
 
 void __ISR(_TIMER_3_VECTOR, ipl4auto) TimerInterrupt5Hz(void) {
     // Clear the interrupt flag.
     IFS0CLR = 1 << 12;
     interrupts.event5Hz = TRUE;
+    FRC++;1
 }
 
 void __ISR(_TIMER_2_VECTOR, ipl4auto) TimerInterrupt100Hz(void) {
