@@ -53,7 +53,7 @@ typedef struct {
 
     CookStates cookMode; // stores the cook states
     OvenStates ovenState; // stores the oven states
-    InputStates inputState; // stores the input state (TIME/TEMP)
+    InputStates inputSelection; // stores the input state (TIME/TEMP)
 } ovenData;
 
 typedef struct {
@@ -70,7 +70,8 @@ typedef struct {
 ovenData oven;
 TimerInterrupt interrupts;
 ButtonEventFlags buttonEvent;
-uint8_t FRC = 0; // acronym for free running counter. It's for the 5Hz interrupt.
+uint32_t FRC = 0; // acronym for free running counter. It's for the 5Hz interrupt.
+uint32_t prevFRC = 0; // the previous FRC, to be used in START to PENDING_SELECTOR_CHANGE
 
 
 // Configuration Bit settings
@@ -130,29 +131,77 @@ int main() {
                 break;
             case START:
                 if (AdcChanged()) {
-                    if(oven.inputState == TIME) {
-                        oven.cookInitTime = AdcRead(); // what exactly is this ten bit number being returned?
+                    if(oven.inputSelection == TIME) {
+                        oven.cookInitTime = (AdcRead() >> 2) + 1; // by bitshifting left 2 and adding 1, we get time.
+                    } else if(oven.inputSelection == TEMP) {
+                        oven.temperature = (AdcRead() >> 2) + 300; // " " but for temperature.
                     }
+                    // UPDATE LEDS HERE.
+                    break;
                 }
                 if (buttonEvent & BUTTON_EVENT_4DOWN) {
                     TIMER_2HZ_RESET(); // Reset 2Hz Timer
                     interrupts.event2Hz = FALSE; // reset interrupt
-                    // how do you save the initial start time? AdcRead??
+                    oven.cookInitTime = (AdcRead() >> 2) + 1; // how do you save the initial start time? AdcRead??
                     oven.ovenState = COUNTDOWN; // Turn oven on.
                     buttonEvent = BUTTON_EVENT_NONE; // Clear button event.
                     OledUpdate(); // update display...?
+                    break;
                 } else if (buttonEvent & BUTTON_EVENT_3DOWN) {
-                    // store free running time
+                    prevFRC = FRC; // store free running time
                     buttonEvent = BUTTON_EVENT_NONE;
                     oven.ovenState = PENDING_SELECTOR_CHANGE;
+                    break;
                 }
                 // eventually, oven.ovenState will equal COUNTDOWN or PENDING_SELECTOR_CHANGE
                 break;
             case COUNTDOWN:
-                if()
+                
+                
                 break;
             case PENDING_SELECTOR_CHANGE:
                 // if button counter < LONG_PRESS && BUTTON_EVENT_3UP
+                if(FRC - prevFRC < LONG_PRESS && BUTTON_EVENT_3UP) {
+                    oven.cookInitTime = 1;
+                    oven.temperature = 350;
+                    
+                    // rotate between the cooking modes.
+                    switch(oven.cookMode) {
+                        case BAKE:
+                            oven.cookMode = TOAST;
+                            break;
+                        case TOAST:
+                            oven.cookMode = BROIL;
+                            break;
+                        case BROIL:
+                            oven.cookMode = BAKE;
+                            break;
+                        default:
+                            printf("Something went wrong.\n");
+                            break;
+                    }
+                    
+                    // UPDATE THE DISPLAY
+                    
+                    buttonEvent = BUTTON_EVENT_NONE;
+                    
+                } else if(FRC - prevFRC >= LONG_PRESS && BUTTON_EVENT_3UP) {
+                    switch(oven.inputSelection) {
+                        case TIME:
+                            oven.inputSelection = TEMP;
+                            break;
+                        case TEMP:
+                            oven.inputSelection = TIME;
+                            break;
+                        default:
+                            printf("Something went wrong in input selection.\n");
+                            break;
+                    }
+                    
+                    // UPDATE THE DISPLAY
+                    
+                    buttonEvent = BUTTON_EVENT_NONE;
+                }
                 break;
             case PENDING_RESET:
 
@@ -178,7 +227,9 @@ void printOven(void) {
 void __ISR(_TIMER_1_VECTOR, ipl4auto) TimerInterrupt2Hz(void) {
     // Clear the interrupt flag.
     IFS0CLR = 1 << 4;
-    interrupts.event2Hz = TRUE;
+    if(AdcChanged()) {
+        interrupts.event2Hz = TRUE;
+    }
     
 }
 
@@ -186,7 +237,7 @@ void __ISR(_TIMER_3_VECTOR, ipl4auto) TimerInterrupt5Hz(void) {
     // Clear the interrupt flag.
     IFS0CLR = 1 << 12;
     interrupts.event5Hz = TRUE;
-    FRC++;1
+    FRC++;
 }
 
 void __ISR(_TIMER_2_VECTOR, ipl4auto) TimerInterrupt100Hz(void) {
