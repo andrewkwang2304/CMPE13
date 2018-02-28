@@ -131,9 +131,9 @@ int main() {
                 break;
             case START:
                 if (AdcChanged()) {
-                    if(oven.inputSelection == TIME) {
+                    if (oven.inputSelection == TIME) {
                         oven.cookInitTime = (AdcRead() >> 2) + 1; // by bitshifting left 2 and adding 1, we get time.
-                    } else if(oven.inputSelection == TEMP) {
+                    } else if (oven.inputSelection == TEMP) {
                         oven.temperature = (AdcRead() >> 2) + 300; // " " but for temperature.
                     }
                     // UPDATE LEDS HERE.
@@ -156,17 +156,25 @@ int main() {
                 // eventually, oven.ovenState will equal COUNTDOWN or PENDING_SELECTOR_CHANGE
                 break;
             case COUNTDOWN:
-                
-                
+                if (buttonEvent = BUTTON_EVENT_4DOWN) {
+                    prevFRC = FRC;
+                    buttonEvent = BUTTON_EVENT_NONE;
+                    oven.ovenState = PENDING_RESET;
+                } else if (interrupts.event2Hz && oven.cookTimeLeft > 0) {
+                    oven.cookTimeLeft--;
+                    // Update LEDS
+                    // Update Display
+                    interrupts.event2Hz = FALSE;
+                }
                 break;
             case PENDING_SELECTOR_CHANGE:
                 // if button counter < LONG_PRESS && BUTTON_EVENT_3UP
-                if(FRC - prevFRC < LONG_PRESS && BUTTON_EVENT_3UP) {
+                if (FRC - prevFRC < LONG_PRESS && BUTTON_EVENT_3UP) {
                     oven.cookInitTime = 1;
                     oven.temperature = 350;
-                    
+
                     // rotate between the cooking modes.
-                    switch(oven.cookMode) {
+                    switch (oven.cookMode) {
                         case BAKE:
                             oven.cookMode = TOAST;
                             break;
@@ -180,13 +188,13 @@ int main() {
                             printf("Something went wrong.\n");
                             break;
                     }
-                    
+
                     // UPDATE THE DISPLAY
-                    
+
                     buttonEvent = BUTTON_EVENT_NONE;
-                    
-                } else if(FRC - prevFRC >= LONG_PRESS && BUTTON_EVENT_3UP) {
-                    switch(oven.inputSelection) {
+
+                } else if (FRC - prevFRC >= LONG_PRESS && BUTTON_EVENT_3UP) {
+                    switch (oven.inputSelection) {
                         case TIME:
                             oven.inputSelection = TEMP;
                             break;
@@ -197,14 +205,23 @@ int main() {
                             printf("Something went wrong in input selection.\n");
                             break;
                     }
-                    
+
                     // UPDATE THE DISPLAY
-                    
+
                     buttonEvent = BUTTON_EVENT_NONE;
+                    oven.ovenState = START;
                 }
                 break;
             case PENDING_RESET:
-
+                if (interrupts.event2Hz && oven.cookTimeLeft > 0) {
+                    oven.cookTimeLeft--;
+                    // update LEDS
+                    // update the display
+                    interrupts.event2Hz = FALSE;
+                } else if (buttonEvent == BUTTON_EVENT_4UP) {
+                    buttonEvent = BUTTON_EVENT_NONE;
+                    oven.ovenState = RESET;
+                }
                 break;
             default:
                 printf("boo");
@@ -224,13 +241,39 @@ void printOven(void) {
     
 }
 
+void LEDOvenTimer(void) {
+    int time = (int)(oven.cookTimeLeft + 0.5);
+    double eighthTime = time / 8;
+    if(time == 0) {
+        LEDS_SET(0b0);
+    } else if(time <= eighthTime) {
+        LEDS_SET(0b10000000);
+    } else if(time <= 2*eighthTime) {
+        LEDS_SET(0b11000000);
+    } else if(time <= 3*eighthTime) {
+        LEDS_SET(0b11100000);
+    } else if(time <= 4*eighthTime) {
+        LEDS_SET(0b11110000);
+    } else if(time <= 5*eighthTime) {
+        LEDS_SET(0b11111000);
+    } else if(time <= 6*eighthTime) {
+        LEDS_SET(0b11111100);
+    } else if(time <= 7*eighthTime) {
+        LEDS_SET(0b11111110);
+    } else {
+        LEDS_SET(0b11111111);
+    }
+}
+
+
+
 void __ISR(_TIMER_1_VECTOR, ipl4auto) TimerInterrupt2Hz(void) {
     // Clear the interrupt flag.
     IFS0CLR = 1 << 4;
-    if(AdcChanged()) {
+    if (AdcChanged()) {
         interrupts.event2Hz = TRUE;
     }
-    
+
 }
 
 void __ISR(_TIMER_3_VECTOR, ipl4auto) TimerInterrupt5Hz(void) {
