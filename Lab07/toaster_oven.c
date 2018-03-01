@@ -22,8 +22,18 @@
 #define LONG_PRESS 5
 #define TRUE 1
 #define FALSE 0
+#define MAX_SIZE 500
+
+// **** Declare any function prototypes here ****
+void printOven(void);
+void LEDOvenTimer(void);
 
 // **** Declare any datatypes here ****
+
+typedef enum {
+    ON,
+    OFF
+} OnOrOff;
 
 typedef enum {
     RESET,
@@ -54,24 +64,24 @@ typedef struct {
     CookStates cookMode; // stores the cook states
     OvenStates ovenState; // stores the oven states
     InputStates inputSelection; // stores the input state (TIME/TEMP)
+    OnOrOff onOrOff; // on or off.
 } ovenData;
 
 typedef struct {
     int event2Hz; // like the previous lab, each event has its own true/false
     int event5Hz; // " "
-    int event100Hz; // " "
-
     uint8_t counter5Hz;
 } TimerInterrupt;
 
 
 
 // **** Define any module-level, global, or external variables here ****
-ovenData oven;
-TimerInterrupt interrupts;
-ButtonEventFlags buttonEvent;
-uint32_t FRC = 0; // acronym for free running counter. It's for the 5Hz interrupt.
-uint32_t prevFRC = 0; // the previous FRC, to be used in START to PENDING_SELECTOR_CHANGE
+static ovenData oven;
+static TimerInterrupt interrupts;
+static ButtonEventFlags buttonEvent;
+static uint32_t FRC = 0; // acronym for free running counter. It's for the 5Hz interrupt.
+static uint32_t prevFRC = 0; // the previous FRC, to be used in START to PENDING_SELECTOR_CHANGE
+static int Hz2Counter = 0; // this prevents double time in the timer. See 2Hz Interrupt.
 
 
 // Configuration Bit settings
@@ -118,9 +128,6 @@ int main() {
     AdcInit();
     oven.ovenState = RESET; // initializes oven from nowhere to RESET
 
-
-    LEDS_SET(0x01);
-
     while (1) {
         switch (oven.ovenState) {
             case RESET:
@@ -128,48 +135,51 @@ int main() {
                 oven.temperature = 300;
                 OledClear(OLED_COLOR_BLACK);
                 oven.ovenState = START;
+                oven.onOrOff = OFF;
+                printOven();
                 break;
             case START:
                 if (AdcChanged()) {
                     if (oven.inputSelection == TIME) {
                         oven.cookInitTime = (AdcRead() >> 2) + 1; // by bitshifting left 2 and adding 1, we get time.
+                        oven.cookTimeLeft = oven.cookInitTime;
                     } else if (oven.inputSelection == TEMP) {
                         oven.temperature = (AdcRead() >> 2) + 300; // " " but for temperature.
                     }
-                    // UPDATE LEDS HERE.
+                    printOven();
                     break;
                 }
                 if (buttonEvent & BUTTON_EVENT_4DOWN) {
                     TIMER_2HZ_RESET(); // Reset 2Hz Timer
                     interrupts.event2Hz = FALSE; // reset interrupt
-                    oven.cookInitTime = (AdcRead() >> 2) + 1; // how do you save the initial start time? AdcRead??
-                    oven.ovenState = COUNTDOWN; // Turn oven on.
+                    oven.cookInitTime = (AdcRead() >> 2) + 1;
+                    oven.cookTimeLeft = oven.cookInitTime;
+                    oven.onOrOff = ON; // Turn oven on.
+                    oven.ovenState = COUNTDOWN;
                     buttonEvent = BUTTON_EVENT_NONE; // Clear button event.
-                    OledUpdate(); // update display...?
-                    break;
+                    printOven();
                 } else if (buttonEvent & BUTTON_EVENT_3DOWN) {
                     prevFRC = FRC; // store free running time
                     buttonEvent = BUTTON_EVENT_NONE;
                     oven.ovenState = PENDING_SELECTOR_CHANGE;
-                    break;
                 }
                 // eventually, oven.ovenState will equal COUNTDOWN or PENDING_SELECTOR_CHANGE
                 break;
             case COUNTDOWN:
-                if (buttonEvent = BUTTON_EVENT_4DOWN) {
+                if (interrupts.event2Hz && oven.cookTimeLeft > 0) {
+                    oven.cookTimeLeft--;
+                    LEDOvenTimer();
+                    printOven();
+                    interrupts.event2Hz = FALSE;
+                } else if (buttonEvent & BUTTON_EVENT_4DOWN) {
                     prevFRC = FRC;
                     buttonEvent = BUTTON_EVENT_NONE;
                     oven.ovenState = PENDING_RESET;
-                } else if (interrupts.event2Hz && oven.cookTimeLeft > 0) {
-                    oven.cookTimeLeft--;
-                    // Update LEDS
-                    // Update Display
-                    interrupts.event2Hz = FALSE;
                 }
                 break;
             case PENDING_SELECTOR_CHANGE:
                 // if button counter < LONG_PRESS && BUTTON_EVENT_3UP
-                if (FRC - prevFRC < LONG_PRESS && BUTTON_EVENT_3UP) {
+                if ((FRC - prevFRC < LONG_PRESS) && (BUTTON_EVENT_3UP & buttonEvent)) {
                     oven.cookInitTime = 1;
                     oven.temperature = 350;
 
@@ -189,24 +199,31 @@ int main() {
                             break;
                     }
 
-                    // UPDATE THE DISPLAY
+                    printOven();
 
-                    buttonEvent = BUTTON_EVENT_NONE;
-
-                } else if (FRC - prevFRC >= LONG_PRESS && BUTTON_EVENT_3UP) {
-                    switch (oven.inputSelection) {
+                    buttonEvent = BUTTON_EVENT_NONE; // reset button state
+                    oven.ovenState = START; // return to START
+                } else if (FRC - prevFRC >= LONG_PRESS && (BUTTON_EVENT_3UP & buttonEvent)) {
+                    switch (oven.inputSelection) { // this will rotate between TIME and TEMP
                         case TIME:
-                            oven.inputSelection = TEMP;
+                            if (oven.cookMode == TOAST) { // TOAST doesn't have a TEMP, so it should just ADCRead.
+                                oven.cookInitTime = (AdcRead() >> 2) + 1;
+                                break;
+                            } else {
+                                oven.inputSelection = TEMP;
+                                oven.cookInitTime = (AdcRead() >> 2) + 1;
+                            }
                             break;
                         case TEMP:
                             oven.inputSelection = TIME;
+                            oven.temperature = (AdcRead() >> 2) + 300;
                             break;
                         default:
                             printf("Something went wrong in input selection.\n");
                             break;
                     }
 
-                    // UPDATE THE DISPLAY
+                    printOven();
 
                     buttonEvent = BUTTON_EVENT_NONE;
                     oven.ovenState = START;
@@ -216,17 +233,20 @@ int main() {
                 if (interrupts.event2Hz && oven.cookTimeLeft > 0) {
                     oven.cookTimeLeft--;
                     // update LEDS
-                    // update the display
+                    printOven(); // update the display
                     interrupts.event2Hz = FALSE;
-                } else if (buttonEvent == BUTTON_EVENT_4UP) {
+                } else if ((FRC - prevFRC >= LONG_PRESS) && (buttonEvent & BUTTON_EVENT_4UP)) {
                     buttonEvent = BUTTON_EVENT_NONE;
                     oven.ovenState = RESET;
+                    LEDS_SET(0b00000000); // this will reset the LEDs if user holds down BUTTON 4.
                 }
                 break;
             default:
-                printf("boo");
+                printf("Error in main switch statement.");
                 break;
         }
+        //        oven.cookMode = BAKE;
+        //        printOven();
     }
 
 
@@ -237,43 +257,127 @@ int main() {
 }
 
 void printOven(void) {
-    // three if statements followed by just a regular print.
-    
+    int cooking = FALSE; // cooking is a boolean that determines whether something is cooking or not.
+
+    // if the oven is in either COUNTDOWN or in PENDING_RESET
+    if ((oven.ovenState == COUNTDOWN) || (oven.ovenState == PENDING_RESET)) {
+        cooking = TRUE;
+    }
+
+    char arr[MAX_SIZE];
+    int i = 0;
+    for (; i <= MAX_SIZE; i++) { // this will just clear the array.
+        arr[i] = '\0';
+    }
+    int time = (int) (oven.cookTimeLeft);
+    int min = time / 60;
+    int sec = time % 60;
+
+    // this marks the first switch statement, which checks for BAKE, BROIL, and TOAST.
+    switch (oven.cookMode) {
+        case BAKE:
+            if (cooking) {
+                sprintf(arr, "|\x1\x1\x1\x1\x1|");
+            } else {
+                sprintf(arr, "|\x2\x2\x2\x2\x2|");
+            }
+
+            sprintf(strlen(arr) + arr, "  Mode: BAKE");
+
+            if (!cooking) {
+                // this second switch statement manages TIME and TEMP
+                switch (oven.inputSelection) {
+                    case TIME:
+                        sprintf(strlen(arr) + arr, "\n|     | >Time: %2d:%02d", min, sec);
+                        sprintf(strlen(arr) + arr, "\n|-----|  Temp: %3d\370F", oven.temperature);
+                        break;
+                    case TEMP:
+                        sprintf(strlen(arr) + arr, "\n|     |  Time: %2d:%02d", min, sec);
+                        sprintf(strlen(arr) + arr, "\n|-----| >Temp: %3d\370F", oven.temperature);
+                        break;
+                }
+            } else {
+                sprintf(strlen(arr) + arr, "\n|     |  Time: %2d:%02d", min, sec);
+                sprintf(strlen(arr) + arr, "\n|-----|  Temp: %3d\370F", oven.temperature);
+            }
+            break;
+        case BROIL:
+            if (cooking) {
+                sprintf(arr, "|\x1\x1\x1\x1\x1|");
+            } else if (!cooking) {
+                sprintf(arr, "|\x2\x2\x2\x2\x2|");
+            }
+
+            sprintf(strlen(arr) + arr, "  Mode: BROIL");
+            sprintf(strlen(arr) + arr, "\n|     |  Time: %2d:%02d", min, sec);
+            sprintf(strlen(arr) + arr, "\n|-----|  Temp: %3d\370F", 500);
+            break;
+        case TOAST:
+            if (cooking) {
+                sprintf(arr, "|\x1\x1\x1\x1\x1|");
+            } else if (!cooking) {
+                sprintf(arr, "|\x2\x2\x2\x2\x2|");
+            }
+
+            sprintf(strlen(arr) + arr, "  Mode: TOAST");
+            sprintf(strlen(arr) + arr, "\n|     |  Time: %2d:%02d", min, sec);
+            sprintf(strlen(arr) + arr, "\n|-----|");
+            break;
+    }
+
+    if (!cooking) { // this will include the bottom special characters
+        sprintf(strlen(arr) + arr, "\n|\x4\x4\x4\x4\x4|");
+    } else {
+        sprintf(strlen(arr) + arr, "\n|\x3\x3\x3\x3\x3|");
+    }
+
+    OledClear(OLED_COLOR_BLACK);
+    OledDrawString(arr);
+    OledUpdate();
 }
 
+// I multiply by a large number here because in its original base form won't
+// give an accurate enough number--hence, I scale it up by multiplying by
+// 10000. This gives enough accuracy for the timer.
+
 void LEDOvenTimer(void) {
-    int time = (int)(oven.cookTimeLeft + 0.5);
-    double eighthTime = time / 8;
-    if(time == 0) {
-        LEDS_SET(0b0);
-    } else if(time <= eighthTime) {
+    int time = (int) (oven.cookInitTime);
+    int eighthTime = (10000 * time) / 8;
+    if (time == 0) {
+        LEDS_SET(0b00000000);
+    } else if ((10000 * oven.cookTimeLeft) <= eighthTime) {
         LEDS_SET(0b10000000);
-    } else if(time <= 2*eighthTime) {
+    } else if ((10000 * oven.cookTimeLeft) <= 2 * eighthTime) {
         LEDS_SET(0b11000000);
-    } else if(time <= 3*eighthTime) {
+    } else if ((10000 * oven.cookTimeLeft) <= 3 * eighthTime) {
         LEDS_SET(0b11100000);
-    } else if(time <= 4*eighthTime) {
+    } else if ((10000 * oven.cookTimeLeft) <= 4 * eighthTime) {
         LEDS_SET(0b11110000);
-    } else if(time <= 5*eighthTime) {
+    } else if ((10000 * oven.cookTimeLeft) <= 5 * eighthTime) {
         LEDS_SET(0b11111000);
-    } else if(time <= 6*eighthTime) {
+    } else if ((10000 * oven.cookTimeLeft) <= 6 * eighthTime) {
         LEDS_SET(0b11111100);
-    } else if(time <= 7*eighthTime) {
+    } else if ((10000 * oven.cookTimeLeft) <= 7 * eighthTime) {
         LEDS_SET(0b11111110);
     } else {
         LEDS_SET(0b11111111);
     }
 }
 
-
-
 void __ISR(_TIMER_1_VECTOR, ipl4auto) TimerInterrupt2Hz(void) {
     // Clear the interrupt flag.
     IFS0CLR = 1 << 4;
-    if (AdcChanged()) {
-        interrupts.event2Hz = TRUE;
-    }
 
+    // this statement will prevent the timer from running at double speed.
+    if (oven.ovenState != COUNTDOWN) {
+        interrupts.event2Hz = TRUE;
+    } else {
+        Hz2Counter++;
+        if (Hz2Counter == 2) {
+            interrupts.event2Hz = TRUE;
+            Hz2Counter = 0;
+        }
+    }
 }
 
 void __ISR(_TIMER_3_VECTOR, ipl4auto) TimerInterrupt5Hz(void) {
