@@ -10,6 +10,10 @@
 #include <plib.h>
 
 // User libraries
+#include "Morse.h"
+#include "Oled.h"
+#include "Tree.h"
+#include "Buttons.h"
 
 
 // **** Set any macros or preprocessor directives here ****
@@ -23,9 +27,7 @@
 
 // **** Declare any function prototypes here ****
 
-
-int main()
-{
+int main() {
     BOARD_Init();
 
 
@@ -39,24 +41,74 @@ int main()
     INTSetVectorSubPriority(INT_TIMER_2_VECTOR, INT_SUB_PRIORITY_LEVEL_0);
     INTEnable(INT_T2, INT_ENABLED);
 
-/******************************************************************************
- * Your code goes in between this comment and the following one with asterisks.
- *****************************************************************************/
-    printf("Welcome to the CMPE13 Lab8 blank. Please remove this line.");
+    /******************************************************************************
+     * Your code goes in between this comment and the following one with asterisks.
+     *****************************************************************************/
+    //    ButtonsInit();
+    //    OledInit();
+    //    MorseInit();
+    //    
+    //    while(1) {
+    //        
+    //    }
 
+    TRISD &= ~0x00E0;
+    TRISF &= ~0x0002;
+    uint8_t event;
+    int i;
+    LATD = 0; // Make sure that BTN4 is unpressed
+    // Wait for 24 timesteps (only need to wait 20 bc of debouncing)
+    for (i = 0; i < 20; ++i) {
+        event = MorseCheckEvents();
+        if (event != MORSE_EVENT_NONE) {
+            while (1);
+        }
+    }
+    // Now set the button high so that a DOWN_EVENT occurs at t=24
+    LATD = BUTTON4_STATE_FLAG;
+    for (i = 0; i < BUTTONS_DEBOUNCE_PERIOD - 1; ++i) {
+        event = MorseCheckEvents();
+        if (event != MORSE_EVENT_NONE) {
+            while (1);
+        }
+    }
+    // Now this next check will be a NO_EVENT when the button event occurs.
+    event = MorseCheckEvents();
+    if (event != MORSE_EVENT_NONE) {
+        while (1);
+    }
+    // Now change the button state to trigger an UP_EVENT at t=60
+    for (i = 0; i < 32; ++i) {
+        event = MorseCheckEvents();
+        if (event != MORSE_EVENT_NONE) {
+            while (1);
+        }
+    }
+    LATD = 0;
+    for (i = 0; i < BUTTONS_DEBOUNCE_PERIOD - 1; ++i) {
+        event = MorseCheckEvents();
+        if (event != MORSE_EVENT_NONE) {
+            while (1);
+        }
+    }
+    // Now this next check will be a DASH when the button event occurs.
+    event = MorseCheckEvents();
+    if (event != MORSE_EVENT_DASH) {
+        while (1);
+    }
 
-/******************************************************************************
- * Your code goes in between this comment and the preceding one with asterisks.
- *****************************************************************************/
+    /******************************************************************************
+     * Your code goes in between this comment and the preceding one with asterisks.
+     *****************************************************************************/
 
     while (1);
 }
 
-void __ISR(_TIMER_2_VECTOR, IPL4AUTO) TimerInterrupt100Hz(void)
-{
+void __ISR(_TIMER_2_VECTOR, IPL4AUTO) TimerInterrupt100Hz(void) {
     // Clear the interrupt flag.
     IFS0CLR = 1 << 8;
 
     //******** Put your code here *************//
-    
+
+
 }

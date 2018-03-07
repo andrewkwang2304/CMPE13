@@ -23,7 +23,7 @@ typedef enum {
     DOT,
     DASH,
     INTER_LETTER
-}MorseEvents;
+} MorseEvents;
 
 // **** Define any module-level, global, or external variables here ****
 static const char *morseSetup[63] = {
@@ -39,6 +39,8 @@ static const char *morseSetup[63] = {
 };
 static Node head;
 static Node current;
+MorseEvents morseEvent;
+static int c = 0; // counter
 
 
 // **** Declare any function prototypes here ****
@@ -55,14 +57,14 @@ int MorseInit(void) {
 char MorseDecode(MorseChar in) {
     switch (in) {
         case MORSE_CHAR_DOT:
-            if(current->leftChild) {
+            if (current->leftChild) {
                 current = current->leftChild;
                 return SUCCESS;
             }
             return STANDARD_ERROR;
             break;
         case MORSE_CHAR_DASH:
-            if(current->rightChild) {
+            if (current->rightChild) {
                 current = current->rightChild;
                 return SUCCESS;
             }
@@ -71,20 +73,64 @@ char MorseDecode(MorseChar in) {
         case MORSE_CHAR_END_OF_CHAR:
             current = head;
             char temp = current->data;
-            if(temp != '#')
+            if (temp != '#')
                 return temp;
             else
                 return STANDARD_ERROR;
             break;
         case MORSE_CHAR_DECODE_RESET:
-            
-            break;
+            current = head;
+            return SUCCESS;
         default:
-            printf("ERROR in MorseDecode().\n");
-            break;
+            return STANDARD_ERROR;
     }
 }
 
 MorseEvent MorseCheckEvents(void) {
-
+    uint16_t buttonEvent = ButtonsCheckEvents();
+    switch (morseEvent) {
+        case WAITING:
+            c++;
+            if (buttonEvent == BUTTON_EVENT_4DOWN) {
+                morseEvent = WAITING;
+                c = 0;
+            }
+            return MORSE_EVENT_NONE;
+        case DOT:
+            c++;
+            if (c >= MORSE_EVENT_LENGTH_DOWN_DOT) {
+                morseEvent = DASH;
+            }
+            if (buttonEvent == BUTTON_EVENT_4UP) {
+                morseEvent = INTER_LETTER;
+                c = 0;
+                return MORSE_EVENT_DOT;
+            }
+            return MORSE_EVENT_NONE;
+        case DASH:
+            if (buttonEvent == BUTTON_EVENT_4UP) {
+                morseEvent = INTER_LETTER;
+                c = 0;
+                return MORSE_EVENT_DASH;
+            }
+            return MORSE_EVENT_NONE;
+            break;
+        case INTER_LETTER:
+            if (c >= MORSE_EVENT_LENGTH_DOWN_DOT) {
+                morseEvent = WAITING;
+                return MORSE_EVENT_INTER_WORD;
+            }
+            if (buttonEvent == BUTTON_EVENT_4DOWN) {
+                c = 0;
+                if (c >= MORSE_EVENT_INTER_LETTER) {
+                    morseEvent = DOT;
+                    return MORSE_EVENT_INTER_LETTER;
+                }
+                morseEvent = DOT;
+                return MORSE_EVENT_NONE;
+            }
+        default:
+            return MORSE_EVENT_NONE;
+    }
+    return MORSE_EVENT_NONE;
 }
