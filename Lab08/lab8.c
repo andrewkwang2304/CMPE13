@@ -13,19 +13,29 @@
 #include "Morse.h"
 #include "Oled.h"
 #include "Tree.h"
-#include "Buttons.h"
 
 
 // **** Set any macros or preprocessor directives here ****
 // Specify a bit mask for setting/clearing the pin corresponding to BTN4. Should only be used when
 // unit testing the Morse event checker.
 #define BUTTON4_STATE_FLAG (1 << 7)
+#define MAX_STRING_SIZE 200
 
 // **** Declare any data types here ****
 
 // **** Define any module-level, global, or external variables here ****
+static MorseEvent checker; // for use in MorseCheckEvents
+static char decodeOutput; // decodeOutput stores the returned value of MorseDecode
+
+static char topLine[21]; // topLine will store the string value of the top line of the OLED.
+static char bottomLine[MAX_STRING_SIZE]; // vice versa.
+static int topCharTracker = 0; // this will track the location of topLine
+static int bottomCharTracker = 0; // vice versa.
 
 // **** Declare any function prototypes here ****
+static void clearAndUpdateTop(void);
+static void appendCharToTop(char c);
+static void appendCharToBottom(char c);
 
 int main() {
     BOARD_Init();
@@ -44,58 +54,56 @@ int main() {
     /******************************************************************************
      * Your code goes in between this comment and the following one with asterisks.
      *****************************************************************************/
-    //    ButtonsInit();
-    //    OledInit();
-    //    MorseInit();
-    //    
-    //    while(1) {
-    //        
-    //    }
+    OledInit();
 
-    TRISD &= ~0x00E0;
-    TRISF &= ~0x0002;
-    uint8_t event;
-    int i;
-    LATD = 0; // Make sure that BTN4 is unpressed
-    // Wait for 24 timesteps (only need to wait 20 bc of debouncing)
-    for (i = 0; i < 20; ++i) {
-        event = MorseCheckEvents();
-        if (event != MORSE_EVENT_NONE) {
-            while (1);
+    if (MorseInit() == STANDARD_ERROR) {
+        printf("ERROR: MorseInit() failed to initialize.\n");
+        FATAL_ERROR();
+    }
+
+    while (1) {
+        switch (checker) { // checker is a MorseEvent.
+            case MORSE_EVENT_NONE:
+                break;
+            case MORSE_EVENT_DOT:
+                decodeOutput = MorseDecode(MORSE_CHAR_DOT);
+                appendCharToTop(MORSE_CHAR_DOT); // print out to OLED
+                checker = MORSE_EVENT_NONE;
+                break;
+            case MORSE_EVENT_DASH:
+                decodeOutput = MorseDecode(MORSE_CHAR_DASH); // decode
+                appendCharToTop(MORSE_CHAR_DASH); // append dash character to top line.
+                checker = MORSE_EVENT_NONE; // reset the checker.
+                break;
+            case MORSE_EVENT_INTER_LETTER:
+                decodeOutput = MorseDecode(MORSE_CHAR_END_OF_CHAR);
+                clearAndUpdateTop(); // clear the top line.
+                if (decodeOutput == '\0') {
+                    appendCharToBottom(MORSE_CHAR_END_OF_CHAR);
+                } else {
+                    appendCharToBottom(decodeOutput);
+                }
+                MorseDecode(MORSE_CHAR_DECODE_RESET); // this will reset the head to the very top of the BST.
+                checker = MORSE_EVENT_NONE; // reset the checker.
+                break;
+            case MORSE_EVENT_INTER_WORD:
+                decodeOutput = MorseDecode(MORSE_CHAR_END_OF_CHAR);
+                clearAndUpdateTop();
+                if (decodeOutput == '\0') {
+                    appendCharToBottom(MORSE_CHAR_END_OF_CHAR);
+                } else {
+                    appendCharToBottom(decodeOutput);
+                }
+                appendCharToBottom(' '); // includes a space in between words.
+                MorseDecode(MORSE_CHAR_DECODE_RESET);
+                checker = MORSE_EVENT_NONE; // reset the checker.
+                break;
+            default:
+                checker = MORSE_EVENT_NONE;
+                break;
         }
     }
-    // Now set the button high so that a DOWN_EVENT occurs at t=24
-    LATD = BUTTON4_STATE_FLAG;
-    for (i = 0; i < BUTTONS_DEBOUNCE_PERIOD - 1; ++i) {
-        event = MorseCheckEvents();
-        if (event != MORSE_EVENT_NONE) {
-            while (1);
-        }
-    }
-    // Now this next check will be a NO_EVENT when the button event occurs.
-    event = MorseCheckEvents();
-    if (event != MORSE_EVENT_NONE) {
-        while (1);
-    }
-    // Now change the button state to trigger an UP_EVENT at t=60
-    for (i = 0; i < 32; ++i) {
-        event = MorseCheckEvents();
-        if (event != MORSE_EVENT_NONE) {
-            while (1);
-        }
-    }
-    LATD = 0;
-    for (i = 0; i < BUTTONS_DEBOUNCE_PERIOD - 1; ++i) {
-        event = MorseCheckEvents();
-        if (event != MORSE_EVENT_NONE) {
-            while (1);
-        }
-    }
-    // Now this next check will be a DASH when the button event occurs.
-    event = MorseCheckEvents();
-    if (event != MORSE_EVENT_DASH) {
-        while (1);
-    }
+
 
     /******************************************************************************
      * Your code goes in between this comment and the preceding one with asterisks.
@@ -109,6 +117,29 @@ void __ISR(_TIMER_2_VECTOR, IPL4AUTO) TimerInterrupt100Hz(void) {
     IFS0CLR = 1 << 8;
 
     //******** Put your code here *************//
+    checker = MorseCheckEvents(); // simply checks events.
+}
 
+static void clearAndUpdateTop(void) {
+    for (topCharTracker = 0; topCharTracker < 20; topCharTracker++) {
+        topLine[topCharTracker] = ' '; // although REALLY unlikely this will ever occur, this will cause the top line to wrap around to the beginning if it exceeds 20.
+    }
+    topCharTracker = 0;
+    OledDrawString(topLine);
+    OledUpdate();
+}
 
+static void appendCharToTop(char c) {
+    topLine[topCharTracker++] = c; // store character to current location in topLine array.
+    if (topCharTracker > 20) {
+        topCharTracker = 0;
+    }
+    OledDrawString(topLine);
+    OledUpdate();
+}
+
+static void appendCharToBottom(char c) {
+    bottomLine[bottomCharTracker++] = c; // store character to current location in bottomLine array.
+    OledDrawString(bottomLine);
+    OledUpdate();
 }
