@@ -1,3 +1,8 @@
+// QUESTIONS:
+// Is there an issue setting gData->hit = SomeHitStatus? I'm getting an assignment
+// error despite seeing the comments tell me to assign gData->hit to a HitStatus.
+
+
 // **** Include libraries here ****
 // Standard libraries
 
@@ -7,14 +12,18 @@
 
 // User libraries
 #include "Field.h"
+#include "Protocol.h"
 
 // **** Set any macros or preprocessor directives here ****
+#define TRUE 1
+#define FALSE 0
 
 // **** Declare any data types here ****
 
 // **** Define any module-level, global, or external variables here ****
 
 // **** Declare any function prototypes here ****
+uint8_t FieldDirectionHandler(Field *f, uint8_t row, uint8_t col, BoatDirection dir, BoatType type, int l);
 
 /**
  * FieldInit() will fill the passed field array with the data specified in positionData. Also the
@@ -93,55 +102,18 @@ FieldPosition FieldSetLocation(Field *f, uint8_t row, uint8_t col, FieldPosition
  * @return TRUE for success, FALSE for failure
  */
 uint8_t FieldAddBoat(Field *f, uint8_t row, uint8_t col, BoatDirection dir, BoatType type) {
-    switch(type) {
+    switch (type) {
         case FIELD_BOAT_SMALL:
-            switch(dir) {
-                case FIELD_BOAT_DIRECTION_NORTH:
-                    
-                case FIELD_BOAT_DIRECTION_EAST:
-                case FIELD_BOAT_DIRECTION_SOUTH:
-                case FIELD_BOAT_DIRECTION_WEST:
-                default:
-                    printf("ERROR: No direction was valid in FieldAddBoat() FIELD_BOAT_SMALL.");
-                    break;
-            }
-            break;
+            return FieldDirectionHandler(f, row, col, dir, type, 3);
         case FIELD_BOAT_MEDIUM:
-            switch(dir) {
-                case FIELD_BOAT_DIRECTION_NORTH:
-                case FIELD_BOAT_DIRECTION_EAST:
-                case FIELD_BOAT_DIRECTION_SOUTH:
-                case FIELD_BOAT_DIRECTION_WEST:
-                default:
-                    printf("ERROR: No direction was valid in FieldAddBoat() FIELD_BOAT_MEDIUM.");
-                    break;
-            }
+            return FieldDirectionHandler(f, row, col, dir, type, 4);
             break;
         case FIELD_BOAT_LARGE:
-            switch(dir) {
-                case FIELD_BOAT_DIRECTION_NORTH:
-                case FIELD_BOAT_DIRECTION_EAST:
-                case FIELD_BOAT_DIRECTION_SOUTH:
-                case FIELD_BOAT_DIRECTION_WEST:
-                default:
-                    printf("ERROR: No direction was valid in FieldAddBoat() FIELD_BOAT_LARGE.");
-                    break;
-            }
-            break;
+            return FieldDirectionHandler(f, row, col, dir, type, 5);
         case FIELD_BOAT_HUGE:
-            switch(dir) {
-                case FIELD_BOAT_DIRECTION_NORTH:
-                case FIELD_BOAT_DIRECTION_EAST:
-                case FIELD_BOAT_DIRECTION_SOUTH:
-                case FIELD_BOAT_DIRECTION_WEST:
-                default:
-                    printf("ERROR: No direction was valid in FieldAddBoat() FIELD_BOAT_HUGE.");
-                    break;
-            }
-            break;
+            return FieldDirectionHandler(f, row, col, dir, type, 6);
         default:
-            printf("ERROR: None of the boat types were valid in FieldAddBoat().\n");
-            break;
+            return FALSE;
     }
 }
 
@@ -157,7 +129,63 @@ uint8_t FieldAddBoat(Field *f, uint8_t row, uint8_t col, BoatDirection dir, Boat
  * @return The data that was stored at the field position indicated by gData before this attack.
  */
 FieldPosition FieldRegisterEnemyAttack(Field *f, GuessData *gData) {
-    
+    FieldPosition guessedPosition = f->field[gData->row][gData->col];
+    switch (guessedPosition) {
+        case FIELD_POSITION_EMPTY:
+            f->field[gData->row][gData->col] = FIELD_POSITION_MISS;
+            gData->hit = HIT_MISS;
+            return FIELD_POSITION_EMPTY;
+        case FIELD_POSITION_SMALL_BOAT:
+            if(f->smallBoatLives == 1) {
+                f->field[gData->row][gData->col] = FIELD_POSITION_HIT;
+                gData->hit = HIT_SUNK_SMALL_BOAT;
+                f->smallBoatLives--;
+                return FIELD_POSITION_SMALL_BOAT;
+            } else if(f->smallBoatLives > 1) {
+                f->field[gData->row][gData->col] = FIELD_POSITION_HIT;
+                gData->hit = HIT_HIT;
+                f->smallBoatLives--;
+                return FIELD_POSITION_SMALL_BOAT;
+            }
+        case FIELD_POSITION_MEDIUM_BOAT:
+            if(f->mediumBoatLives == 1) {
+                f->field[gData->row][gData->col] = FIELD_POSITION_HIT;
+                gData->hit = HIT_SUNK_MEDIUM_BOAT;
+                f->mediumBoatLives--;
+                return FIELD_POSITION_MEDIUM_BOAT;
+            } else if(f->mediumBoatLives > 1) {
+                f->field[gData->row][gData->col] = FIELD_POSITION_HIT;
+                gData->hit = HIT_HIT;
+                f->mediumBoatLives--;
+                return FIELD_POSITION_MEDIUM_BOAT;
+            }
+        case FIELD_POSITION_LARGE_BOAT:
+            if(f->largeBoatLives == 1) {
+                f->field[gData->row][gData->col] = FIELD_POSITION_HIT;
+                gData->hit = HIT_SUNK_LARGE_BOAT;
+                f->largeBoatLives--;
+                return FIELD_POSITION_LARGE_BOAT;
+            } else if(f->largeBoatLives > 1) {
+                f->field[gData->row][gData->col] = FIELD_POSITION_HIT;
+                gData->hit = HIT_HIT;
+                f->largeBoatLives--;
+                return FIELD_POSITION_LARGE_BOAT;
+            }
+        case FIELD_POSITION_HUGE_BOAT:
+            if(f->hugeBoatLives == 1) {
+                f->field[gData->row][gData->col] = FIELD_POSITION_HIT;
+                gData->hit = HIT_SUNK_SMALL_BOAT;
+                f->hugeBoatLives--;
+                return FIELD_POSITION_HUGE_BOAT;
+            } else if(f->hugeBoatLives > 1) {
+                f->field[gData->row][gData->col] = FIELD_POSITION_HIT;
+                gData->hit = HIT_HIT;
+                f->hugeBoatLives--;
+                return FIELD_POSITION_HUGE_BOAT;
+            }
+        default:
+            return FIELD_POSITION_UNKNOWN;
+    }
 }
 
 /**
@@ -174,7 +202,37 @@ FieldPosition FieldRegisterEnemyAttack(Field *f, GuessData *gData) {
  * registered.
  */
 FieldPosition FieldUpdateKnowledge(Field *f, const GuessData *gData) {
-    
+    FieldPosition guess = FieldAt(f, gData->row, gData->col);
+    switch(gData->hit) {
+        case HIT_MISS:
+            f->field[gData->row][gData->col] = FIELD_POSITION_EMPTY;
+            gData->hit = HIT_MISS;
+            break;
+        case HIT_HIT:
+            f->field[gData->row][gData->col] = FIELD_POSITION_HIT;
+            gData->hit = HIT_HIT;
+            break;
+        case HIT_SUNK_SMALL_BOAT:
+            f->field[gData->row][gData->col] = FIELD_POSITION_SMALL_BOAT;
+            gData->hit = HIT_SUNK_SMALL_BOAT;
+            break;
+        case HIT_SUNK_MEDIUM_BOAT:
+            f->field[gData->row][gData->col] = FIELD_POSITION_MEDIUM_BOAT;
+            gData->hit = HIT_SUNK_MEDIUM_BOAT;
+            break;
+        case HIT_SUNK_LARGE_BOAT:
+            f->field[gData->row][gData->col] = FIELD_POSITION_LARGE_BOAT;
+            gData->hit = HIT_SUNK_LARGE_BOAT;
+            break;
+        case HIT_SUNK_HUGE_BOAT:
+            f->field[gData->row][gData->col] = FIELD_POSITION_HUGE_BOAT;
+            gData->hit = HIT_SUNK_HUGE_BOAT;
+            break;
+        default:
+            f->field[gData->row][gData->col] = FIELD_POSITION_UNKNOWN;
+            break;
+    }
+    return guess;
 }
 
 /**
@@ -186,6 +244,79 @@ FieldPosition FieldUpdateKnowledge(Field *f, const GuessData *gData) {
  * @return A 4-bit value with each bit corresponding to whether each ship is alive or not.
  */
 uint8_t FieldGetBoatStates(const Field *f) {
+    uint8_t returnState = 0b0000;
     
+    if(f->smallBoatLives != 0) {
+        returnState |= FIELD_BOAT_STATUS_SMALL;
+    }
+    if(f->mediumBoatLives != 0) {
+        returnState |= FIELD_BOAT_STATUS_MEDIUM;
+    }
+    if(f->largeBoatLives != 0) {
+        returnState |= FIELD_BOAT_STATUS_LARGE;
+    }
+    if(f->hugeBoatLives != 0) {
+        returnState |= FIELD_BOAT_STATUS_HUGE;
+    } 
+    
+    return returnState;
 }
 
+/**
+ * This is a helper function for FieldAddBoat().
+ * 
+ * @param f
+ * @param row
+ * @param col
+ * @param dir
+ * @param type
+ * @return 
+ */
+
+uint8_t FieldDirectionHandler(Field *f, uint8_t row, uint8_t col, BoatDirection dir, BoatType type, int l) {
+    int length;
+    length = l;
+    int i, j;
+    switch (dir) {
+        case FIELD_BOAT_DIRECTION_NORTH:
+            for (i = row; i > (row - length); i--) {
+                if (f->field[i][col] != FIELD_POSITION_EMPTY) {
+                    return FALSE;
+                }
+            }
+            for (i = row; i > (row - length); i--) {
+                f->field[i][col] = type;
+            }
+        case FIELD_BOAT_DIRECTION_EAST:
+            for (j = col; j < (col + length); j++) {
+                if (f->field[row][j] != FIELD_POSITION_EMPTY) {
+                    return FALSE;
+                }
+            }
+            for (j = col; j < (col + length); j++) {
+                f->field[row][j] = type;
+            }
+            break;
+        case FIELD_BOAT_DIRECTION_SOUTH:
+            for (i = row; i < (row + length); i++) {
+                if (f->field[i][col] != FIELD_POSITION_EMPTY) {
+                    return FALSE;
+                }
+            }
+            for (i = row; i < (row + length); i++) {
+                f->field[i][col] = type;
+            }
+        case FIELD_BOAT_DIRECTION_WEST:
+            for (j = col; j > (col - length); j--) {
+                if (f->field[row][j] != FIELD_POSITION_EMPTY) {
+                    return FALSE;
+                }
+            }
+            for (j = col; j > (col + length); j--) {
+                f->field[row][j] = type;
+            }
+        default:
+            return FALSE;
+    }
+    return TRUE;
+}
