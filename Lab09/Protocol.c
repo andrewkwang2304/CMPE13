@@ -1,120 +1,249 @@
-// **** Include libraries here ****
-// Standard libraries
-#include <stdio.h>
-//CMPE13 Support Library
-
-// Microchip libraries
-
-// User libraries
-#include "Protocol.h"
-
-// **** Set any macros or preprocessor directives here ****
-
-// **** Declare any data types here ****
-
-// **** Define any module-level, global, or external variables here ****
-
-// **** Declare any function prototypes here ****
-
-/**
- * Encodes the coordinate data for a guess into the string `message`. This string must be big
- * enough to contain all of the necessary data. The format is specified in PAYLOAD_TEMPLATE_COO,
- * which is then wrapped within the message as defined by MESSAGE_TEMPLATE. The final length of this
- * message is then returned. There is no failure mode for this function as there is no checking
- * for NULL pointers.
- * @param message The character array used for storing the output. Must be long enough to store the
- *                entire string, see PROTOCOL_MAX_MESSAGE_LEN.
- * @param data The data struct that holds the data to be encoded into `message`.
- * @return The length of the string stored into `message`.
- */
-int ProtocolEncodeCooMessage(char *message, const GuessData *data) {
-    char coord = malloc(PROTOCOL_MAX_MESSAGE_LEN * sizeof(char));
-    sprintf(message, PAYLOAD_TEMPLATE_COO, data->row, data->col);
-    
-}
-
-/**
- * Follows from ProtocolEncodeCooMessage above.
- */
-int ProtocolEncodeHitMessage(char *message, const GuessData *data) {
-    
-}
-
-/**
- * Follows from ProtocolEncodeCooMessage above.
- */
-int ProtocolEncodeChaMessage(char *message, const NegotiationData *data) {
-    
-}
-
-/**
- * Follows from ProtocolEncodeCooMessage above.
- */
-int ProtocolEncodeDetMessage(char *message, const NegotiationData *data) {
-    
-}
-
-/**
- * This function decodes a message into either the NegotiationData or GuessData structs depending
- * on what the type of message is. This function receives the message one byte at a time, where the
- * messages are in the format defined by MESSAGE_TEMPLATE, with payloads of the format defined by
- * the PAYLOAD_TEMPLATE_* macros. It returns the type of message that was decoded and also places
- * the decoded data into either the `nData` or `gData` structs depending on what the message held.
- * The onus is on the calling function to make sure the appropriate structs are available (blame the
- * lack of function overloading in C for this ugliness).
+/*
+ * File:   Protocol.c
+ * Author: Kenneth Mai
  *
- * PROTOCOL_PARSING_FAILURE is returned if there was an error of any kind (though this excludes
- * checking for NULL pointers), while
- * 
- * @param in The next character in the NMEA0183 message to be decoded.
- * @param nData A struct used for storing data if a message is decoded that stores NegotiationData.
- * @param gData A struct used for storing data if a message is decoded that stores GuessData.
- * @return A value from the UnpackageDataEnum enum.
+ * Created on March 8, 2018, 5:46 PM
  */
-ProtocolParserStatus ProtocolDecode(char in, NegotiationData *nData, GuessData *gData) {
-    
+
+//Microchip/User Libraries 
+#include "BOARD.h"
+#include "Protocol.h"
+#include "Agent.h"
+#include <xc.h>
+#include <stdint.h>
+#include <time.h>
+
+//Declared Function Prototypes
+static int ConvertAscii(char asciiChar);
+static uint8_t CheckSum(char *stringChecksum);
+
+//Defines/static Variables
+#define TRUE 1
+#define FALSE 0
+#define maxTemplateMessage 4
+static uint8_t checkSumMatch;
+static char *parseMessage[maxTemplateMessage];
+static char *messageTok;
+static int messageTokCount = 0;
+
+typedef enum {
+    WAITING,
+    RECORDING,
+    FIRST_CHECKSUM_HALF,
+    SECOND_CHECKSUM_HALF,
+    NEWLINE,
+} Prot_State;
+
+typedef struct {
+    char maxMessage[PROTOCOL_MAX_PAYLOAD_LEN];
+    int arrayIndex;
+    Prot_State protocolState;
+    uint8_t checksum;
+} Prot_Struct;
+
+Prot_Struct protStruct;
+
+/*Protocol.h functions*************************************************************************/
+
+ProtocolParserStatus ProtocolDecode(char in, NegotiationData *nData, GuessData *gData)
+{      
+    while (1) {
+
+        switch (protStruct.protocolState) {
+
+        case WAITING:
+            if (in == '$') {
+                protStruct.arrayIndex = 0;
+                protStruct.protocolState = RECORDING;
+                return PROTOCOL_PARSING_GOOD;
+            } else {
+                protStruct.protocolState = WAITING;
+                return PROTOCOL_WAITING;
+            }
+            break;
+
+        case RECORDING:
+            if(in == '*') {
+                protStruct.protocolState = FIRST_CHECKSUM_HALF;
+                return PROTOCOL_PARSING_GOOD;
+            } else {
+                protStruct.maxMessage[protStruct.arrayIndex] = in;
+                protStruct.arrayIndex += 1;
+                return PROTOCOL_PARSING_GOOD;
+            }
+            break;
+
+        case FIRST_CHECKSUM_HALF:
+            checkSumMatch = (((protStruct.checksum) | (ConvertAscii(in) & 0x0F)) -
+                    CheckSum(protStruct.maxMessage));
+
+            if (ConvertAscii(in)) {
+                protStruct.checksum = ConvertAscii(in);
+                protStruct.checksum = protStruct.checksum << 4;
+                protStruct.protocolState = SECOND_CHECKSUM_HALF;
+                return PROTOCOL_PARSING_GOOD;
+            } else if (ConvertAscii(in) == FALSE || checkSumMatch != 0) {
+                protStruct.protocolState = WAITING;
+                return PROTOCOL_PARSING_FAILURE;
+            }
+            break;
+
+        case SECOND_CHECKSUM_HALF:
+            checkSumMatch = (((protStruct.checksum) | (ConvertAscii(in) & 0x0F)) -
+                    CheckSum(protStruct.maxMessage));
+
+            if ((ConvertAscii(in) == TRUE) && (checkSumMatch == 0)) {
+                protStruct.maxMessage[protStruct.arrayIndex] = '\0';
+                protStruct.protocolState = NEWLINE;
+                return PROTOCOL_PARSING_GOOD;
+            } else if ((ConvertAscii(in) == FALSE) || (protStruct.checksum - nData->hash != 0)) {
+                protStruct.protocolState = WAITING;
+                return PROTOCOL_PARSING_FAILURE;
+            }
+            break;
+
+        case NEWLINE:
+            //Parse Message [message, %u...]
+            messageTok = strtok(protStruct.maxMessage, ",");
+            while (messageTok != NULL) {
+                parseMessage[messageTokCount] = messageTok;
+                messageTok = strtok(NULL, ",");
+                messageTokCount++;
+            }
+
+            if (in == '\n') {
+                if (strcmp(parseMessage[0], "DET") == 0) {
+                    nData->guess = atoi(parseMessage[1]);
+                    nData->encryptionKey = atoi(parseMessage[2]);
+                    return PROTOCOL_PARSED_DET_MESSAGE;
+                } else if (strcmp(parseMessage[0], "CHA") == 0) {
+                    nData->encryptedGuess = atoi(parseMessage[1]);
+                    nData->hash = atoi(parseMessage[2]);
+                    return PROTOCOL_PARSED_CHA_MESSAGE;
+                } else if (strcmp(parseMessage[0], "COO") == 0) {
+                    gData->row = atoi(parseMessage[1]);
+                    gData->col = atoi(parseMessage[2]);
+                    return PROTOCOL_PARSED_COO_MESSAGE;
+                } else if (strcmp(parseMessage[0], "HIT") == 0) {
+                    gData->row = atoi(parseMessage[1]);
+                    gData->col = atoi(parseMessage[2]);
+                    gData->hit = atoi(parseMessage[3]);
+                    return PROTOCOL_PARSED_HIT_MESSAGE;
+                }
+                protStruct.protocolState = WAITING;
+                
+            } else if (in != '\n' || strcmp(parseMessage[0], "DET") == 1 || 
+                    strcmp(parseMessage[0], "CHA") == 1 || strcmp(parseMessage[0], "COO") == 1 ||
+                    strcmp(parseMessage[0], "HIT") == 1) {
+                protStruct.protocolState = WAITING;
+                return PROTOCOL_PARSING_FAILURE;
+            }
+            break;    
+            
+        default:
+            break;
+        }
+    }
 }
 
-/**
- * This function generates all of the data necessary for the negotiation process used to determine
- * the player that goes first. It relies on the pseudo-random functionality built into the standard
- * library. The output is stored in the passed NegotiationData struct. The negotiation data is
- * generated by creating two random 16-bit numbers, one for the actual guess and another for an
- * encryptionKey used for encrypting the data. The 'encryptedGuess' is generated with an
- * XOR(guess, encryptionKey). The hash is simply an 8-bit value that is the XOR() of all of the
- * bytes making up both the guess and the encryptionKey. There is no checking for NULL pointers
- * within this function.
- * @param data The struct used for both input and output of negotiation data.
- */ 
-void ProtocolGenerateNegotiationData(NegotiationData *data) {
-    
+int ProtocolEncodeCooMessage(char *message, const GuessData *data)
+{
+    sprintf(protStruct.maxMessage, PAYLOAD_TEMPLATE_COO, data->row, data->col);
+    protStruct.checksum = CheckSum(protStruct.maxMessage);
+    sprintf(message, MESSAGE_TEMPLATE, protStruct.maxMessage, protStruct.checksum);
+    return strlen(message);
 }
 
-/**
- * Validates that the negotiation data within 'data' is correct according to the algorithm given in
- * GenerateNegotitateData(). Used for verifying another agent's supplied negotiation data. There is
- * no checking for NULL pointers within this function. Returns TRUE if the NegotiationData struct
- * is valid or FALSE on failure.
- * @param data A filled NegotiationData struct that will be validated.
- * @return TRUE if the NegotiationData struct is consistent and FALSE otherwise.
- */
-uint8_t ProtocolValidateNegotiationData(const NegotiationData *data) {
-    
+int ProtocolEncodeHitMessage(char *message, const GuessData *data)
+{
+    sprintf(protStruct.maxMessage, PAYLOAD_TEMPLATE_HIT, data->row, data->col, data->hit);
+    protStruct.checksum = CheckSum(protStruct.maxMessage);
+    sprintf(message, MESSAGE_TEMPLATE, protStruct.maxMessage, protStruct.checksum);
+    return strlen(message);
 }
 
-/**
- * This function returns a TurnOrder enum type representing which agent has won precedence for going
- * first. The value returned relates to the agent whose data is in the 'myData' variable. The turn
- * ordering algorithm relies on the XOR() of the 'encryptionKey' used by both agents. The least-
- * significant bit of XOR(myData.encryptionKey, oppData.encryptionKey) is checked so that if it's a
- * 1 the player with the largest 'guess' goes first otherwise if it's a 0, the agent with the
- * smallest 'guess' goes first. The return value of TURN_ORDER_START indicates that 'myData' won,
- * TURN_ORDER_DEFER indicates that 'oppData' won, otherwise a tie is indicated with TURN_ORDER_TIE.
- * There is no checking for NULL pointers within this function.
- * @param myData The negotiation data representing the current agent.
- * @param oppData The negotiation data representing the opposing agent.
- * @return A value from the TurnOrdering enum representing which agent should go first.
- */
-TurnOrder ProtocolGetTurnOrder(const NegotiationData *myData, const NegotiationData *oppData) {
+int ProtocolEncodeChaMessage(char *message, const NegotiationData *data)
+{
+    sprintf(protStruct.maxMessage, PAYLOAD_TEMPLATE_CHA, data->encryptedGuess, data->hash);
+    protStruct.checksum = CheckSum(protStruct.maxMessage);
+    sprintf(message, MESSAGE_TEMPLATE, protStruct.maxMessage, protStruct.checksum);
+    return strlen(message); 
+}
+
+int ProtocolEncodeDetMessage(char *message, const NegotiationData *data)
+{
+    sprintf(protStruct.maxMessage, PAYLOAD_TEMPLATE_DET, data->guess, data->encryptionKey);
+    protStruct.checksum = CheckSum(protStruct.maxMessage);
+    sprintf(message, MESSAGE_TEMPLATE, protStruct.maxMessage, protStruct.checksum);
+    return strlen(message); 
+}
+
+void ProtocolGenerateNegotiationData(NegotiationData *data)
+{
+    data->encryptionKey = rand();
+    data->guess = rand();
+    data->encryptedGuess = data->encryptionKey ^ data->guess;
+    data->hash = (data->guess >> 8) ^ (data->guess & 0xFF) ^
+            (data->encryptionKey >> 8) ^ (data->encryptionKey & 0xFF);
+}
+
+uint8_t ProtocolValidateNegotiationData(const NegotiationData *data) 
+{
+    if ((data->encryptionKey ^ data->guess) != data->encryptedGuess) {
+        printf("\nfirst one is wrong");
+        return FALSE;
+    }
     
+    if (data->hash == ((data->guess >> 8) ^ (data->encryptionKey >> 8) ^ 
+            (data->encryptionKey & 0xFF) ^ (data->guess & 0xFF))) {
+        return TRUE;
+    } else {
+        return FALSE;
+    }
+}
+
+TurnOrder ProtocolGetTurnOrder(const NegotiationData *myData, const NegotiationData *oppData)
+{
+    if ((myData->encryptedGuess ^ oppData->encryptedGuess) & 0x01) {
+        if (myData->guess > oppData->guess) {
+            return TURN_ORDER_START;
+        } else {
+            return TURN_ORDER_DEFER;
+        }
+    } else {
+        return TURN_ORDER_TIE;
+    }
+}
+
+/*Static Helper Functions*************************************************************************/
+
+int ConvertAscii(char asciiChar)
+{
+    switch (asciiChar) {
+    case '0'...'9':
+        return (asciiChar - 48);
+        break;
+    case 'a'...'f':
+        return (asciiChar - 87);
+        break;
+
+    case 'A'...'F':
+        return (asciiChar - 55);
+        break;
+        
+    default:
+        return FALSE;
+        break;
+    }
+}
+
+uint8_t CheckSum(char *stringChecksum)
+{
+    int i;
+    unsigned char checksum = 0;
+    
+    for(i = 0; stringChecksum[i] != NULL; i++) {
+        checksum ^= stringChecksum[i];
+    }
+    return checksum;
 }
