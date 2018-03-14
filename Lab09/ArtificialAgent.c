@@ -15,7 +15,7 @@
 
 static char maxMessage[PROTOCOL_MAX_MESSAGE_LEN];
 static AgentState agentState;
-static FieldOledTurn fieldTurn;
+static FieldOledTurn fieldTurn = FIELD_OLED_TURN_NONE;
 static Field playerField;
 static Field enemyField;
 static GuessData guessData, enemyGuessData;
@@ -74,16 +74,19 @@ int AgentRun(char in, char *outBuffer) {
                         case TURN_ORDER_DEFER:
                             fieldTurn = FIELD_OLED_TURN_THEIRS;
                             FieldOledDrawScreen(&playerField, &enemyField, fieldTurn);
+                            OledUpdate();
                             agentState = AGENT_STATE_WAIT_FOR_GUESS;
                             break;
                         case TURN_ORDER_START:
                             fieldTurn = FIELD_OLED_TURN_MINE;
                             FieldOledDrawScreen(&playerField, &enemyField, fieldTurn);
+                            OledUpdate();
                             agentState = AGENT_STATE_SEND_GUESS;
                             break;
                         default:
                             OledClear(OLED_COLOR_BLACK);
                             OledDrawString(AGENT_ERROR_STRING_NEG_DATA);
+                            OledUpdate();
                             agentState = AGENT_STATE_INVALID;
                             break;
                     }

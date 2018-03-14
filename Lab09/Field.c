@@ -21,6 +21,10 @@
 // **** Declare any data types here ****
 
 // **** Define any module-level, global, or external variables here ****
+static int smallExistFlag = FALSE;
+static int mediumExistFlag = FALSE;
+static int largeExistFlag = FALSE;
+static int hugeExistFlag = FALSE;
 
 // **** Declare any function prototypes here ****
 uint8_t FieldDirectionHandler(Field *f, uint8_t row, uint8_t col, BoatDirection dir, BoatType type, int l);
@@ -104,17 +108,37 @@ FieldPosition FieldSetLocation(Field *f, uint8_t row, uint8_t col, FieldPosition
 uint8_t FieldAddBoat(Field *f, uint8_t row, uint8_t col, BoatDirection dir, BoatType type) {
     switch (type) {
         case FIELD_BOAT_SMALL:
-            return FieldDirectionHandler(f, row, col, dir, type, 3);
+            if (FieldDirectionHandler(f, row, col, dir, type, 3)) {
+                smallExistFlag = TRUE;
+                return TRUE;
+            }
+            break;
         case FIELD_BOAT_MEDIUM:
-            return FieldDirectionHandler(f, row, col, dir, type, 4);
+            if (FieldDirectionHandler(f, row, col, dir, type, 4)) {
+                mediumExistFlag = TRUE;
+                return TRUE;
+            }
             break;
         case FIELD_BOAT_LARGE:
-            return FieldDirectionHandler(f, row, col, dir, type, 5);
+            if (largeExistFlag == FALSE) {
+                if (FieldDirectionHandler(f, row, col, dir, type, 5)) {
+                    largeExistFlag = TRUE;
+                    return TRUE;
+                }
+            }
+            break;
         case FIELD_BOAT_HUGE:
-            return FieldDirectionHandler(f, row, col, dir, type, 6);
+            if (hugeExistFlag == FALSE) {
+                if (FieldDirectionHandler(f, row, col, dir, type, 6)) {
+                    hugeExistFlag = TRUE;
+                    return TRUE;
+                }
+            }
+            break;
         default:
             return FALSE;
     }
+    return FALSE;
 }
 
 /**
@@ -136,48 +160,48 @@ FieldPosition FieldRegisterEnemyAttack(Field *f, GuessData *gData) {
             gData->hit = HIT_MISS;
             return FIELD_POSITION_EMPTY;
         case FIELD_POSITION_SMALL_BOAT:
-            if(f->smallBoatLives == 1) {
+            if (f->smallBoatLives == 1) {
                 f->field[gData->row][gData->col] = FIELD_POSITION_HIT;
                 gData->hit = HIT_SUNK_SMALL_BOAT;
                 f->smallBoatLives--;
                 return FIELD_POSITION_SMALL_BOAT;
-            } else if(f->smallBoatLives > 1) {
+            } else if (f->smallBoatLives > 1) {
                 f->field[gData->row][gData->col] = FIELD_POSITION_HIT;
                 gData->hit = HIT_HIT;
                 f->smallBoatLives--;
                 return FIELD_POSITION_SMALL_BOAT;
             }
         case FIELD_POSITION_MEDIUM_BOAT:
-            if(f->mediumBoatLives == 1) {
+            if (f->mediumBoatLives == 1) {
                 f->field[gData->row][gData->col] = FIELD_POSITION_HIT;
                 gData->hit = HIT_SUNK_MEDIUM_BOAT;
                 f->mediumBoatLives--;
                 return FIELD_POSITION_MEDIUM_BOAT;
-            } else if(f->mediumBoatLives > 1) {
+            } else if (f->mediumBoatLives > 1) {
                 f->field[gData->row][gData->col] = FIELD_POSITION_HIT;
                 gData->hit = HIT_HIT;
                 f->mediumBoatLives--;
                 return FIELD_POSITION_MEDIUM_BOAT;
             }
         case FIELD_POSITION_LARGE_BOAT:
-            if(f->largeBoatLives == 1) {
+            if (f->largeBoatLives == 1) {
                 f->field[gData->row][gData->col] = FIELD_POSITION_HIT;
                 gData->hit = HIT_SUNK_LARGE_BOAT;
                 f->largeBoatLives--;
                 return FIELD_POSITION_LARGE_BOAT;
-            } else if(f->largeBoatLives > 1) {
+            } else if (f->largeBoatLives > 1) {
                 f->field[gData->row][gData->col] = FIELD_POSITION_HIT;
                 gData->hit = HIT_HIT;
                 f->largeBoatLives--;
                 return FIELD_POSITION_LARGE_BOAT;
             }
         case FIELD_POSITION_HUGE_BOAT:
-            if(f->hugeBoatLives == 1) {
+            if (f->hugeBoatLives == 1) {
                 f->field[gData->row][gData->col] = FIELD_POSITION_HIT;
                 gData->hit = HIT_SUNK_SMALL_BOAT;
                 f->hugeBoatLives--;
                 return FIELD_POSITION_HUGE_BOAT;
-            } else if(f->hugeBoatLives > 1) {
+            } else if (f->hugeBoatLives > 1) {
                 f->field[gData->row][gData->col] = FIELD_POSITION_HIT;
                 gData->hit = HIT_HIT;
                 f->hugeBoatLives--;
@@ -203,7 +227,7 @@ FieldPosition FieldRegisterEnemyAttack(Field *f, GuessData *gData) {
  */
 FieldPosition FieldUpdateKnowledge(Field *f, const GuessData *gData) {
     FieldPosition guess = FieldAt(f, gData->row, gData->col);
-    switch(gData->hit) {
+    switch (gData->hit) {
         case HIT_MISS:
             f->field[gData->row][gData->col] = FIELD_POSITION_EMPTY;
             break;
@@ -239,20 +263,20 @@ FieldPosition FieldUpdateKnowledge(Field *f, const GuessData *gData) {
  */
 uint8_t FieldGetBoatStates(const Field *f) {
     uint8_t returnState = 0b0000;
-    
-    if(f->smallBoatLives != 0) {
+
+    if (f->smallBoatLives != 0) {
         returnState |= FIELD_BOAT_STATUS_SMALL;
     }
-    if(f->mediumBoatLives != 0) {
+    if (f->mediumBoatLives != 0) {
         returnState |= FIELD_BOAT_STATUS_MEDIUM;
     }
-    if(f->largeBoatLives != 0) {
+    if (f->largeBoatLives != 0) {
         returnState |= FIELD_BOAT_STATUS_LARGE;
     }
-    if(f->hugeBoatLives != 0) {
+    if (f->hugeBoatLives != 0) {
         returnState |= FIELD_BOAT_STATUS_HUGE;
-    } 
-    
+    }
+
     return returnState;
 }
 
@@ -274,26 +298,26 @@ uint8_t FieldDirectionHandler(Field *f, uint8_t row, uint8_t col, BoatDirection 
     switch (dir) {
         case FIELD_BOAT_DIRECTION_NORTH:
             for (i = row; i > (row - length); i--) {
-                if (f->field[i][col] != FIELD_POSITION_EMPTY) {
+                if (f->field[i][col] != FIELD_POSITION_EMPTY || i < 0) {
                     return FALSE;
                 }
             }
-            for (i = row; i > (row - length); i--) {
+            for (i = row; i > (row - length) + 1; i--) {
                 f->field[i][col] = type;
             }
         case FIELD_BOAT_DIRECTION_EAST:
             for (j = col; j < (col + length); j++) {
-                if (f->field[row][j] != FIELD_POSITION_EMPTY) {
+                if (f->field[row][j] != FIELD_POSITION_EMPTY || j > 9) {
                     return FALSE;
                 }
             }
-            for (j = col; j < (col + length); j++) {
+            for (j = col; j < (col + length) - 1; j++) {
                 f->field[row][j] = type;
             }
             break;
         case FIELD_BOAT_DIRECTION_SOUTH:
-            for (i = row; i < (row + length); i++) {
-                if (f->field[i][col] != FIELD_POSITION_EMPTY) {
+            for (i = row; i < (row + length) - 1; i++) {
+                if (f->field[i][col] != FIELD_POSITION_EMPTY || i > 5) {
                     return FALSE;
                 }
             }
@@ -301,8 +325,8 @@ uint8_t FieldDirectionHandler(Field *f, uint8_t row, uint8_t col, BoatDirection 
                 f->field[i][col] = type;
             }
         case FIELD_BOAT_DIRECTION_WEST:
-            for (j = col; j > (col - length); j--) {
-                if (f->field[row][j] != FIELD_POSITION_EMPTY) {
+            for (j = col; j > (col - length) + 1; j--) {
+                if (f->field[row][j] != FIELD_POSITION_EMPTY || j < 0) {
                     return FALSE;
                 }
             }
