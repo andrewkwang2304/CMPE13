@@ -206,27 +206,21 @@ FieldPosition FieldUpdateKnowledge(Field *f, const GuessData *gData) {
     switch(gData->hit) {
         case HIT_MISS:
             f->field[gData->row][gData->col] = FIELD_POSITION_EMPTY;
-            gData->hit = HIT_MISS;
             break;
         case HIT_HIT:
             f->field[gData->row][gData->col] = FIELD_POSITION_HIT;
-            gData->hit = HIT_HIT;
             break;
         case HIT_SUNK_SMALL_BOAT:
             f->field[gData->row][gData->col] = FIELD_POSITION_SMALL_BOAT;
-            gData->hit = HIT_SUNK_SMALL_BOAT;
             break;
         case HIT_SUNK_MEDIUM_BOAT:
             f->field[gData->row][gData->col] = FIELD_POSITION_MEDIUM_BOAT;
-            gData->hit = HIT_SUNK_MEDIUM_BOAT;
             break;
         case HIT_SUNK_LARGE_BOAT:
             f->field[gData->row][gData->col] = FIELD_POSITION_LARGE_BOAT;
-            gData->hit = HIT_SUNK_LARGE_BOAT;
             break;
         case HIT_SUNK_HUGE_BOAT:
             f->field[gData->row][gData->col] = FIELD_POSITION_HUGE_BOAT;
-            gData->hit = HIT_SUNK_HUGE_BOAT;
             break;
         default:
             f->field[gData->row][gData->col] = FIELD_POSITION_UNKNOWN;

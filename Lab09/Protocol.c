@@ -167,7 +167,7 @@ int ProtocolEncodeChaMessage(char *message, const NegotiationData *data)
     sprintf(protStruct.maxMessage, PAYLOAD_TEMPLATE_CHA, data->encryptedGuess, data->hash);
     protStruct.checksum = CheckSum(protStruct.maxMessage);
     sprintf(message, MESSAGE_TEMPLATE, protStruct.maxMessage, protStruct.checksum);
-    return strlen(message); 
+    return strlen(message);
 }
 
 int ProtocolEncodeDetMessage(char *message, const NegotiationData *data)
