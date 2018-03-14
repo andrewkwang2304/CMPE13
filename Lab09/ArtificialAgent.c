@@ -1,6 +1,7 @@
 /*
  * File:   ArtificialAgent.c
  * Author: Kenneth Mai
+ *         Andrew Kwang
  *
  * Created on March 8, 2018, 5:47 PM
  */
@@ -25,11 +26,13 @@ void AgentInit(void) {
     // initialization of the field
     FieldInit(&playerField, FIELD_POSITION_EMPTY);
     FieldInit(&enemyField, FIELD_POSITION_UNKNOWN);
-
+    
     while (!FieldAddBoat(&playerField, rand() % 6, rand() % 10, rand() % 4, FIELD_BOAT_SMALL));
     while (!FieldAddBoat(&playerField, rand() % 6, rand() % 10, rand() % 4, FIELD_BOAT_MEDIUM));
     while (!FieldAddBoat(&playerField, rand() % 6, rand() % 10, rand() % 4, FIELD_BOAT_LARGE));
     while (!FieldAddBoat(&playerField, rand() % 6, rand() % 10, rand() % 4, FIELD_BOAT_HUGE));
+    
+    
 
     OledClear(OLED_COLOR_BLACK);
     FieldOledDrawScreen(&playerField, &enemyField, fieldTurn);
@@ -43,28 +46,28 @@ int AgentRun(char in, char *outBuffer) {
         int enemyProtocolDecode = ProtocolDecode(in, &enemyNegotiationData, &enemyGuessData);
 
         switch (agentState) {
-        
+
             default:
                 break;
 
 
-            // Start everything up...
+                // Start everything up...
             case AGENT_STATE_GENERATE_NEG_DATA:
                 ProtocolGenerateNegotiationData(&negotiationData);
                 agentState = AGENT_STATE_SEND_CHALLENGE_DATA;
                 return ProtocolEncodeChaMessage(outBuffer, &negotiationData);
-            
+
             case AGENT_STATE_SEND_CHALLENGE_DATA:
                 agentState = AGENT_STATE_DETERMINE_TURN_ORDER;
-                if(enemyProtocolDecode == PROTOCOL_PARSED_CHA_MESSAGE) {
+                if (enemyProtocolDecode == PROTOCOL_PARSED_CHA_MESSAGE) {
                     return ProtocolEncodeDetMessage(outBuffer, &negotiationData);
                 }
                 return 0;
-                
+
             case AGENT_STATE_DETERMINE_TURN_ORDER:
-                if(ProtocolValidateNegotiationData(&enemyNegotiationData)) {
+                if (ProtocolValidateNegotiationData(&enemyNegotiationData)) {
                     TurnOrder whoseTurn = ProtocolGetTurnOrder(&negotiationData, &enemyNegotiationData);
-                    switch(whoseTurn) {
+                    switch (whoseTurn) {
                         case TURN_ORDER_TIE:
                             OledClear(OLED_COLOR_BLACK);
                             OledDrawString(AGENT_ERROR_STRING_ORDERING);
@@ -92,7 +95,7 @@ int AgentRun(char in, char *outBuffer) {
                     }
                 }
                 break;
-                
+
             case AGENT_STATE_INVALID:
                 return 0;
             case AGENT_STATE_WAIT_FOR_GUESS:

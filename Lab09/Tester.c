@@ -22,10 +22,7 @@ static uint8_t buttonEvents;
 
 // **** Declare any function prototypes here ****
 
-
-
-int main()
-{
+int main() {
     BOARD_Init();
 
     // Configure Timer 2 using PBCLK as input. We configure it using a 1:16 prescalar, so each timer
@@ -51,26 +48,23 @@ int main()
     while ((buttonEvents & BUTTON_EVENT_4UP) == 0);
 
 
-/******************************************************************************
- * Your code goes in between this comment and the following one with asterisks.
- *****************************************************************************/
+    /******************************************************************************
+     * Your code goes in between this comment and the following one with asterisks.
+     *****************************************************************************/
 
 
-/******************************************************************************
- * Your code goes in between this comment and the preceeding one with asterisks
- *****************************************************************************/
+    /******************************************************************************
+     * Your code goes in between this comment and the preceeding one with asterisks
+     *****************************************************************************/
 
     while (1);
 }
-
-
 
 /**
  * This is the interrupt for the Timer2 peripheral. It just keeps incrementing a counter used to
  * track the time until the first user input.
  */
-void __ISR(_TIMER_2_VECTOR, IPL4AUTO) TimerInterrupt100Hz(void)
-{
+void __ISR(_TIMER_2_VECTOR, IPL4AUTO) TimerInterrupt100Hz(void) {
     // Clear the interrupt flag.
     IFS0CLR = 1 << 8;
 

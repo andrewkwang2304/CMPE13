@@ -1,8 +1,9 @@
-// QUESTIONS:
-// Is there an issue setting gData->hit = SomeHitStatus? I'm getting an assignment
-// error despite seeing the comments tell me to assign gData->hit to a HitStatus.
-
-
+/*
+ * File:   Field.c
+ * Author: Andrew Kwang
+ *
+ * Created on March 9, 2018, 1:32 PM
+ */
 // **** Include libraries here ****
 // Standard libraries
 
@@ -37,6 +38,14 @@ uint8_t FieldDirectionHandler(Field *f, uint8_t row, uint8_t col, BoatDirection 
  *                     FieldPosition.
  */
 void FieldInit(Field *f, FieldPosition p) {
+
+    int i, j;
+    for (i = 0; i < FIELD_ROWS; i++) {
+        for (j = 0; j < FIELD_COLS; j++) {
+            f->field[i][j] = p;
+        }
+    }
+
     f->field[FIELD_ROWS][FIELD_COLS] = p;
     f->smallBoatLives = FIELD_BOAT_LIVES_SMALL;
     f->mediumBoatLives = FIELD_BOAT_LIVES_MEDIUM;
@@ -105,43 +114,42 @@ FieldPosition FieldSetLocation(Field *f, uint8_t row, uint8_t col, FieldPosition
  * FieldPosition enum.
  * @return TRUE for success, FALSE for failure
  */
-uint8_t FieldAddBoat(Field *f, uint8_t row, uint8_t col, BoatDirection dir, BoatType type)
-{
+uint8_t FieldAddBoat(Field *f, uint8_t row, uint8_t col, BoatDirection dir, BoatType type) {
     switch (type) {
-    case FIELD_BOAT_SMALL:
-        if (smallExistFlag == FALSE) {
-            if (FieldDirectionHandler(f, row, col, dir, type, 3)) {
-                smallExistFlag = TRUE;
-                return TRUE;
+        case FIELD_BOAT_SMALL:
+            if (smallExistFlag == FALSE) {
+                if (FieldDirectionHandler(f, row, col, dir, type, 3)) {
+                    smallExistFlag = TRUE;
+                    return TRUE;
+                }
             }
-        }
-        break;
-    case FIELD_BOAT_MEDIUM:
-        if (mediumExistFlag == FALSE) {
-            if (FieldDirectionHandler(f, row, col, dir, type, 4)) {
-                mediumExistFlag = TRUE;
-                return TRUE;
+            break;
+        case FIELD_BOAT_MEDIUM:
+            if (mediumExistFlag == FALSE) {
+                if (FieldDirectionHandler(f, row, col, dir, type, 4)) {
+                    mediumExistFlag = TRUE;
+                    return TRUE;
+                }
             }
-        }
-        break;
-    case FIELD_BOAT_LARGE:
-        if (largeExistFlag == FALSE) {
-            if (FieldDirectionHandler(f, row, col, dir, type, 5)) {
-                largeExistFlag = TRUE;
-                return TRUE;
+            break;
+        case FIELD_BOAT_LARGE:
+            if (largeExistFlag == FALSE) {
+                if (FieldDirectionHandler(f, row, col, dir, type, 5)) {
+                    largeExistFlag = TRUE;
+                    return TRUE;
+                }
             }
-        }
-        break;
-    case FIELD_BOAT_HUGE:
-        if (hugeExistFlag == FALSE) {
-            if (FieldDirectionHandler(f, row, col, dir, type, 6)) {
-                hugeExistFlag = TRUE;
-                return TRUE;
+            break;
+        case FIELD_BOAT_HUGE:
+            if (hugeExistFlag == FALSE) {
+                if (FieldDirectionHandler(f, row, col, dir, type, 6)) {
+                    hugeExistFlag = TRUE;
+                    return TRUE;
+                }
             }
-        }
-        break;
-    default:
-        return FALSE;
+            break;
+        default:
+            return FALSE;
     }
     return FALSE;
 }
@@ -296,56 +304,7 @@ uint8_t FieldGetBoatStates(const Field *f) {
  * @return 
  */
 
-//uint8_t FieldDirectionHandler(Field *f, uint8_t row, uint8_t col, BoatDirection dir, BoatType type, int l) {
-//    int length;
-//    length = l;
-//    int i, j;
-//    switch (dir) {
-//        case FIELD_BOAT_DIRECTION_NORTH:
-//            for (i = row; i > (row - length); i--) {
-//                if (f->field[i][col] != FIELD_POSITION_EMPTY || i < 0) {
-//                    return FALSE;
-//                }
-//            }
-//            for (i = row; i > (row - length) + 1; i--) {
-//                f->field[i][col] = type;
-//            }
-//        case FIELD_BOAT_DIRECTION_EAST:
-//            for (j = col; j < (col + length); j++) {
-//                if (f->field[row][j] != FIELD_POSITION_EMPTY || j > 9) {
-//                    return FALSE;
-//                }
-//            }
-//            for (j = col; j < (col + length) - 1; j++) {
-//                f->field[row][j] = type;
-//            }
-//            break;
-//        case FIELD_BOAT_DIRECTION_SOUTH:
-//            for (i = row; i < (row + length) - 1; i++) {
-//                if (f->field[i][col] != FIELD_POSITION_EMPTY || i > 5) {
-//                    return FALSE;
-//                }
-//            }
-//            for (i = row; i < (row + length); i++) {
-//                f->field[i][col] = type;
-//            }
-//        case FIELD_BOAT_DIRECTION_WEST:
-//            for (j = col; j > (col - length) + 1; j--) {
-//                if (f->field[row][j] != FIELD_POSITION_EMPTY || j < 0) {
-//                    return FALSE;
-//                }
-//            }
-//            for (j = col; j > (col + length); j--) {
-//                f->field[row][j] = type;
-//            }
-//        default:
-//            return FALSE;
-//    }
-//    return TRUE;
-//}
-
-uint8_t FieldDirectionHandler(Field *f, uint8_t row, uint8_t col, BoatDirection dir, BoatType type, int l)
-{
+uint8_t FieldDirectionHandler(Field *f, uint8_t row, uint8_t col, BoatDirection dir, BoatType type, int l) {
     int i;
     int lengthNeeded;
 
@@ -364,66 +323,66 @@ uint8_t FieldDirectionHandler(Field *f, uint8_t row, uint8_t col, BoatDirection 
 
     switch (dir) {
 
-    case FIELD_BOAT_DIRECTION_NORTH:
-  
-        //Check for empty spaces and  if occupied space 
-        for (i = 0; i < lengthNeeded; i++) {
-            if (((row - i) - 1) < 0 || (f->field[row - i][col] != FIELD_POSITION_EMPTY)) {
-                return FALSE;
-            }
-        }
-        
-        //Build boat
-        for (i = 0; i < lengthNeeded; i++) {
-            f->field[row][col] = incrementBuild;
-            row--;
-        }
-        return TRUE;
-        break;
+        case FIELD_BOAT_DIRECTION_NORTH:
 
-    case FIELD_BOAT_DIRECTION_EAST:
-        for (i = 0; i < lengthNeeded; i++) {
-            if (((col + i) + 1) > 10 || (f->field[row][col + i] != FIELD_POSITION_EMPTY)) {
-                return FALSE;
+            //Check for empty spaces and  if occupied space 
+            for (i = 0; i < lengthNeeded; i++) {
+                if (((row - i) - 1) < 0 || (f->field[row - i][col] != FIELD_POSITION_EMPTY)) {
+                    return FALSE;
+                }
             }
-        }
-        for (i = 0; i < lengthNeeded; i++) {
-            f->field[row][col] = incrementBuild;
-            col++;
-        }
-        return TRUE;
-        break;
 
-    case FIELD_BOAT_DIRECTION_SOUTH:
-        for (i = 0; i < lengthNeeded; i++) {
-            if (((row + i) + 1) > 6 || (f->field[row + i][col] != FIELD_POSITION_EMPTY)) {
-                return FALSE;
+            //Build boat
+            for (i = 0; i < lengthNeeded; i++) {
+                f->field[row][col] = incrementBuild;
+                row--;
             }
-        }
-        for (i = 0; i < lengthNeeded; i++) {
-            f->field[row][col] = incrementBuild;
-            row++;
-        }
-        return TRUE;
-        break;
+            return TRUE;
+            break;
 
-    case FIELD_BOAT_DIRECTION_WEST:
-        for (i = 0; i < lengthNeeded; i++) {
-            if (((col - i) - 1) < 0 || (f->field[row][col - i] != FIELD_POSITION_EMPTY)) {
-                return FALSE;
+        case FIELD_BOAT_DIRECTION_EAST:
+            for (i = 0; i < lengthNeeded; i++) {
+                if (((col + i) + 1) > 10 || (f->field[row][col + i] != FIELD_POSITION_EMPTY)) {
+                    return FALSE;
+                }
             }
-        }
-        for (i = 0; i < lengthNeeded; i++) {
-            f->field[row][col] = incrementBuild;
-            col--;
-        }
-        return TRUE;
-        break;
+            for (i = 0; i < lengthNeeded; i++) {
+                f->field[row][col] = incrementBuild;
+                col++;
+            }
+            return TRUE;
+            break;
 
-    default:
-        return FALSE;
-        break;
-        
+        case FIELD_BOAT_DIRECTION_SOUTH:
+            for (i = 0; i < lengthNeeded; i++) {
+                if (((row + i) + 1) > 6 || (f->field[row + i][col] != FIELD_POSITION_EMPTY)) {
+                    return FALSE;
+                }
+            }
+            for (i = 0; i < lengthNeeded; i++) {
+                f->field[row][col] = incrementBuild;
+                row++;
+            }
+            return TRUE;
+            break;
+
+        case FIELD_BOAT_DIRECTION_WEST:
+            for (i = 0; i < lengthNeeded; i++) {
+                if (((col - i) - 1) < 0 || (f->field[row][col - i] != FIELD_POSITION_EMPTY)) {
+                    return FALSE;
+                }
+            }
+            for (i = 0; i < lengthNeeded; i++) {
+                f->field[row][col] = incrementBuild;
+                col--;
+            }
+            return TRUE;
+            break;
+
+        default:
+            return FALSE;
+            break;
+
     }
     return 0;
 }
