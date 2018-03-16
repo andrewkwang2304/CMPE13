@@ -13,6 +13,7 @@
 #include "Protocol.h"
 #include "Agent.h"
 #include "Oled.h"
+#include "Buttons.h"
 
 static char tempMes[PROTOCOL_MAX_PAYLOAD_LEN];
 static int fieldTurn;
@@ -190,4 +191,3 @@ uint8_t AgentGetStatus(void) {
 uint8_t AgentGetEnemyStatus(void) {
     return FieldGetBoatStates(enemyField);
 }
-
