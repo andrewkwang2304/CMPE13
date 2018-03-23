@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // **** Include libraries here ****
 // Standard libraries
 #include <string.h>
